@@ -1,12 +1,8 @@
 import { supabase } from "./supabase";
 import { generateOrderCode } from "../utils/generateOrderCode";
 
-/**
- * Crea un pedido en estado PENDIENTE.
- */
 export async function createOrder(order) {
   const orderCode = generateOrderCode();
-
   const { data, error } = await supabase
     .from("orders")
     .insert({
@@ -33,15 +29,10 @@ export async function createOrder(order) {
     })
     .select()
     .single();
-
   if (error) throw error;
-
   return data;
 }
 
-/**
- * Obtiene un pedido aprobado por código.
- */
 export async function getOrderByCode(orderCode) {
   const { data, error } = await supabase
     .from("orders")
@@ -49,76 +40,53 @@ export async function getOrderByCode(orderCode) {
     .eq("order_code", orderCode)
     .eq("payment_status", "APROBADO")
     .single();
-
   if (error) throw error;
-
   return data;
 }
 
-/**
- * Lista todos los pedidos.
- */
 export async function listOrders() {
   const { data, error } = await supabase
     .from("orders")
     .select("*")
     .order("created_at", { ascending: false });
-
   if (error) throw error;
-
   return data;
 }
 
-/**
- * Aprueba un pedido y envía el correo.
- */
 export async function approveOrder(orderId) {
   const { data, error } = await supabase
     .from("orders")
-    .update({
-      payment_status: "APROBADO",
-      status: "COMPLETADO",
-    })
+    .update({ payment_status: "APROBADO", status: "COMPLETADO" })
     .eq("id", orderId)
     .select()
     .single();
-
   if (error) throw error;
-
-  // Dispara la Edge Function que envía el correo con el QR.
-  // Si falla, el pedido ya quedó aprobado igual, pero devolvemos el error
-  // para que el panel pueda avisarte con un mensaje claro.
-  const { data: fnData, error: fnError } = await supabase.functions.invoke("send-capsule-email", {
-    body: { orderId: data.id },
-  });
-
-  if (fnError) {
-    console.error("Edge Function send-capsule-email falló:", fnError);
-    return { order: data, emailError: fnError.message || "No se pudo enviar el correo" };
-  }
-  if (fnData?.error) {
-    console.error("send-capsule-email respondió con error:", fnData.error);
-    return { order: data, emailError: typeof fnData.error === "string" ? fnData.error : JSON.stringify(fnData.error) };
-  }
-
-  return { order: data, emailError: null };
+  return { order: data, emailError: await sendOrderEmail(data.id) };
 }
 
-/**
- * Rechaza un pedido.
- */
+/** Sends the printable QR card to the administrator for manual forwarding. */
+export async function sendOrderEmail(orderId) {
+  const { data, error } = await supabase.functions.invoke("send-capsule-email", { body: { orderId } });
+  if (error) return error.message || "No se pudo enviar el correo";
+  if (data?.error) return typeof data.error === "string" ? data.error : JSON.stringify(data.error);
+  return null;
+}
+
 export async function rejectOrder(orderId) {
   const { data, error } = await supabase
     .from("orders")
-    .update({
-      payment_status: "RECHAZADO",
-      status: "RECHAZADO",
-    })
+    .update({ payment_status: "RECHAZADO", status: "RECHAZADO" })
     .eq("id", orderId)
     .select()
     .single();
-
   if (error) throw error;
+  return data;
+}
 
+/** Deletes the record and its uploaded media through the protected Edge Function. */
+export async function deleteOrder(orderId) {
+  const { data, error } = await supabase.functions.invoke("delete-order", { body: { orderId } });
+  if (error) throw error;
+  if (data?.error) throw new Error(typeof data.error === "string" ? data.error : JSON.stringify(data.error));
   return data;
 }
