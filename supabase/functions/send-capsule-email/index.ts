@@ -36,7 +36,6 @@ Deno.serve(async (req) => {
     // Email apps often block externally-hosted images. Adding the QR as a CID
     // attachment makes it part of the message, so it survives printing.
     const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=800x800&margin=16&format=png&data=${encodeURIComponent(capsuleUrl)}`;
-    const recipientName = escapeHtml(order.full_name || "");
 
     const resend = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -47,16 +46,28 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: fromEmail,
         to: [order.email],
-        subject: "Tu capsula Revela esta lista",
-        text: `Hola ${order.full_name || ""}. Tu capsula ya esta disponible: ${capsuleUrl}`,
+        subject: "Tu tarjeta Revela esta lista para imprimir",
+        // El enlace queda solo como alternativa de accesibilidad; la tarjeta
+        // HTML no lo muestra porque está pensada para imprimir y entregar.
+        text: `Tu tarjeta Revela esta lista. Imprime el codigo QR y escanealo con la camara del telefono. Enlace alternativo: ${capsuleUrl}`,
         html: `
-          <h2>Hola ${recipientName}</h2>
-          <p>Tu capsula ya esta disponible.</p>
-          <p>Imprime este codigo QR y escanealo con la camara del telefono para abrir la sorpresa.</p>
-          <a href="${capsuleUrl}" style="display:inline-block;background:#fff;padding:12px;border:1px solid #e3d9c6">
-            <img src="cid:revela-capsule-qr" width="280" height="280" alt="Codigo QR para abrir tu capsula Revela" style="display:block;border:0" />
-          </a>
-          <p>Si estas viendo el correo en el telefono, <a href="${capsuleUrl}">abre la capsula aqui</a>.</p>
+          <div style="margin:0;padding:32px 16px;background:#f7f3eb;font-family:Georgia,serif;color:#30264d;text-align:center">
+            <div style="max-width:480px;margin:0 auto;background:#fffdf8;border:7px solid #281f47;border-radius:42px;padding:42px 30px 38px;box-sizing:border-box">
+              <div style="font-size:28px;line-height:1;margin-bottom:20px">&#10024;</div>
+              <p style="margin:0 0 25px;font-size:23px;line-height:1.35;font-style:italic;font-weight:bold">
+                Alguien prepar&oacute; algo bonito<br />para ti
+              </p>
+              <div style="display:inline-block;background:#fbf7ef;border:1px solid #e3d9c6;border-radius:22px;padding:18px">
+                <img src="cid:revela-capsule-qr" width="320" height="320" alt="Codigo QR: escanea para revelar tu sorpresa" style="display:block;border:0;max-width:100%;height:auto" />
+              </div>
+              <p style="margin:28px 0 0;font-family:Arial,sans-serif;font-size:13px;line-height:1.55;color:#756b91">
+                Escanea el c&oacute;digo QR con la c&aacute;mara de tu tel&eacute;fono<br />para revelar tu sorpresa.
+              </p>
+              <p style="margin:18px 0 0;font-family:Arial,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#9b91af">
+                Tarjeta Revela &middot; lista para imprimir
+              </p>
+            </div>
+          </div>
         `,
         attachments: [{
           path: qrImageUrl,
@@ -85,14 +96,4 @@ function json(body: unknown, status: number) {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
     status,
   });
-}
-
-function escapeHtml(value: string) {
-  return value.replace(/[&<>'"]/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    "'": "&#39;",
-    '"': "&quot;",
-  })[character]);
 }

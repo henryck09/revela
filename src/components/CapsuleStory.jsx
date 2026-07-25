@@ -1,17 +1,12 @@
 import { useState } from "react";
-import { Play, ExternalLink, ArrowLeft } from "lucide-react";
+import { Play, Pause, ArrowLeft } from "lucide-react";
 import {
   StoryBlock, formatDate, yearsSince, extractYoutubeId,
   TEXT_DARK, TEXT_MUTED, INPUT_BORDER,
 } from "../lib/capsuleConfig";
 
 /**
- * Renderiza la "cápsula" ya revelada: mensaje principal, canción, fotos, video y cierre.
- * Se usa tanto en la vista previa del creador como en la página pública /m/:code.
- *
- * order: { emoji, accentHex, fontDef, specialDate, occasion, mainText, youtubeUrl,
- *          youtubeStart, songUrl, photos, videoUrl, closingText, storyBg }
- * onBack: opcional, si se pasa muestra un botón "volver a editar"
+ * Renders the revealed capsule in the editor preview and public page.
  */
 export default function CapsuleStory({ order, onBack }) {
   const [playSong, setPlaySong] = useState(false);
@@ -23,7 +18,6 @@ export default function CapsuleStory({ order, onBack }) {
 
   const youtubeId = extractYoutubeId(youtubeUrl);
   const years = yearsSince(specialDate);
-  const youtubeWatchUrl = youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}&t=${youtubeStart}s` : "#";
   const textStyle = { fontFamily: fontDef.css, fontStyle: fontDef.italic ? "italic" : "normal" };
 
   return (
@@ -39,37 +33,40 @@ export default function CapsuleStory({ order, onBack }) {
             )}
             <p style={{ ...textStyle, fontSize: 20, lineHeight: 1.4, color: TEXT_DARK }}>{mainText}</p>
 
-            {(youtubeId || songUrl) && (
+            {songUrl && (
               <div className="rounded-lg overflow-hidden mt-5" style={{ border: `1px solid #${accentHex}55` }}>
-                {!playSong ? (
-                  <button onClick={() => setPlaySong(true)} className="w-full flex items-center justify-center gap-2 py-4" style={{ background: `#${accentHex}15`, color: `#${accentHex}`, fontSize: 12 }}>
-                    <Play size={14} /> reproducir canción {songUrl ? "" : "(30s)"}
-                  </button>
-                ) : songUrl ? (
-                  <audio src={songUrl} controls autoPlay loop className="w-full" style={{ height: 40 }} />
-                ) : (
-                  <div>
-                    <iframe
-                      width="100%" height="90"
-                      src={`https://www.youtube.com/embed/${youtubeId}?start=${youtubeStart}&end=${youtubeStart + 30}&autoplay=1`}
-                      title="Canción" frameBorder="0"
-                      allow="autoplay; encrypted-media"
-                    />
-                    <a href={youtubeWatchUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-1.5 py-2" style={{ background: `#${accentHex}10`, color: `#${accentHex}`, fontSize: 10.5 }}>
-                      <ExternalLink size={11} /> ¿no suena? ábrela directo en YouTube
-                    </a>
-                  </div>
+                <audio src={songUrl} controls className="w-full" style={{ height: 42 }}>
+                  Tu navegador no puede reproducir esta canción.
+                </audio>
+              </div>
+            )}
+
+            {!songUrl && youtubeId && (
+              <div className="relative rounded-lg overflow-hidden mt-5" style={{ border: `1px solid #${accentHex}55` }}>
+                {playSong && (
+                  <iframe
+                    width="1"
+                    height="1"
+                    src={`https://www.youtube.com/embed/${youtubeId}?start=${youtubeStart}&end=${youtubeStart + 30}&autoplay=1&controls=0&playsinline=1`}
+                    title="Reproductor de audio"
+                    allow="autoplay; encrypted-media"
+                    style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+                  />
                 )}
+                <button onClick={() => setPlaySong((playing) => !playing)} className="w-full flex items-center justify-center gap-2 py-4" style={{ background: `#${accentHex}15`, color: `#${accentHex}`, fontSize: 12 }}>
+                  {playSong ? <Pause size={14} /> : <Play size={14} />}
+                  {playSong ? "pausar canción" : "reproducir canción (30s)"}
+                </button>
               </div>
             )}
           </div>
         </StoryBlock>
 
-        {photos.map((p, i) => (
-          <StoryBlock key={p.id || i}>
+        {photos.map((photo, index) => (
+          <StoryBlock key={photo.id || index}>
             <div className="px-4 py-3">
-              <img src={p.url} alt="" className="w-full rounded-xl object-cover" style={{ maxHeight: 300 }} />
-              {p.caption && <p className="mt-2 px-1" style={{ ...textStyle, fontSize: 13, color: TEXT_DARK }}>{p.caption}</p>}
+              <img src={photo.url} alt="" className="w-full rounded-xl object-cover" style={{ maxHeight: 300 }} />
+              {photo.caption && <p className="mt-2 px-1" style={{ ...textStyle, fontSize: 13, color: TEXT_DARK }}>{photo.caption}</p>}
             </div>
           </StoryBlock>
         ))}
