@@ -1,16 +1,17 @@
-# React + Vite
+# Revela
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Cápsulas digitales con QR: la persona arma su mensaje (fotos, video, canción y texto), paga por
+WhatsApp, tú lo apruebas en el panel admin y te llega por correo la tarjeta QR lista para
+reenviar o imprimir.
 
-Currently, two official plugins are available:
+- **Guía de despliegue:** [`SETUP.md`](./SETUP.md)
+- **Manual operativo completo** (arquitectura, flujo, panel, seguridad, mantenimiento):
+  [`docs/Manual_operativo_Revela.docx`](./docs/Manual_operativo_Revela.docx)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Desarrollo local
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm install
+cp .env.example .env   # completa con tus datos de Supabase
+npm run dev
+```

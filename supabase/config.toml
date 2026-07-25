@@ -1,0 +1,12 @@
+project_id = "revela-demo"
+
+# La app llama a esta función ya con la sesión del admin activa; se desactiva
+# la verificación de JWT a nivel de plataforma para evitar falsos 403 y
+# porque solo envía a un correo fijo (ADMIN_EMAIL), no expone datos de terceros.
+[functions.send-capsule-email]
+verify_jwt = false
+
+# Esta función borra datos reales: se deja la verificación de JWT activada
+# (capa extra), además de la comprobación manual que ya hace el propio código.
+[functions.delete-order]
+verify_jwt = true

@@ -35,11 +35,20 @@ create table if not exists public.orders (
 -- Habilitar seguridad a nivel de fila
 alter table public.orders enable row level security;
 
--- Cualquiera puede INSERTAR un pedido (es el formulario público de creación)
+-- Permisos base de esquema/tabla (sin esto, Supabase puede devolver
+-- "permission denied for schema public" para service_role/authenticated,
+-- aunque las políticas RLS de abajo estén bien)
+grant usage on schema public to anon, authenticated, service_role;
+grant select, insert, update, delete on public.orders to anon, authenticated, service_role;
+grant usage, select on all sequences in schema public to anon, authenticated, service_role;
+
+-- Cualquiera puede INSERTAR un pedido (es el formulario público de creación).
+-- Se incluye también "authenticated" por si el admin prueba el formulario
+-- de creación estando logueado en el mismo navegador.
 drop policy if exists "Cualquiera puede crear pedidos" on public.orders;
 create policy "Cualquiera puede crear pedidos"
   on public.orders for insert
-  to anon
+  to anon, authenticated
   with check (true);
 
 -- Cualquiera puede LEER un pedido, pero solo si ya fue aprobado
@@ -50,7 +59,7 @@ create policy "Leer solo pedidos aprobados"
   to anon
   using (payment_status = 'APROBADO');
 
--- Los usuarios autenticados (tú, el admin) pueden leer y actualizar TODO
+-- Los usuarios autenticados (tú, el admin) pueden leer, actualizar y eliminar TODO
 drop policy if exists "Admin lee todo" on public.orders;
 create policy "Admin lee todo"
   on public.orders for select
@@ -60,6 +69,12 @@ create policy "Admin lee todo"
 drop policy if exists "Admin actualiza todo" on public.orders;
 create policy "Admin actualiza todo"
   on public.orders for update
+  to authenticated
+  using (true);
+
+drop policy if exists "Admin elimina todo" on public.orders;
+create policy "Admin elimina todo"
+  on public.orders for delete
   to authenticated
   using (true);
 
@@ -80,4 +95,10 @@ drop policy if exists "Cualquiera puede ver archivos" on storage.objects;
 create policy "Cualquiera puede ver archivos"
   on storage.objects for select
   to anon
+  using (bucket_id = 'capsule-media');
+
+drop policy if exists "Admin elimina archivos" on storage.objects;
+create policy "Admin elimina archivos"
+  on storage.objects for delete
+  to authenticated, service_role
   using (bucket_id = 'capsule-media');
