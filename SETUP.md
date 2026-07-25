@@ -61,6 +61,14 @@ y trabaja solo desde ahí. La carpeta del proyecto se llama `revela-demo/` y con
 
 ## 3. Desplegar la Edge Function — PASO A PASO, sin saltarse el `cd`
 
+### Importante para que lleguen correos a clientes
+
+`onboarding@resend.dev` es solo para pruebas: Resend lo entrega únicamente a la
+dirección con la que creaste tu cuenta. Antes de recibir pedidos reales, verifica
+un dominio en Resend y usa una dirección de ese dominio como remitente, por ejemplo
+`Revela <hola@tudominio.com>`. Después actualiza el secreto `FROM_EMAIL` con esa
+dirección y vuelve a desplegar la función.
+
 Todo esto se ejecuta en una terminal en tu computador (no aquí en el chat), **parado exactamente
 dentro de la carpeta `revela-demo/` del proyecto** (la que tiene `package.json`).
 
