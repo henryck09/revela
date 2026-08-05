@@ -58,7 +58,7 @@ export default function CreatorPage() {
   const slug = useMemo(() => slugify(mainText.slice(0, 24) || meta.label), [mainText, meta.label]);
   const youtubeId = useMemo(() => extractYoutubeId(youtubeUrl), [youtubeUrl]);
   const years = yearsSince(specialDate);
-  const price = video ? 7 : 5;
+  const price = video ? 5 : 4;
 
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&qzone=1&data=${encodeURIComponent(SITE_URL + "/m/" + slug)}&bgcolor=FFFFFF&color=${accentHex}`;
 
@@ -442,7 +442,7 @@ export default function CreatorPage() {
                 <span style={{ fontSize: 13, color: TEXT_DARK }}>{video ? "Fotos + video" : "Solo fotos"}</span>
                 <span style={{ fontSize: 22, fontFamily: fontDef.css, fontStyle: fontDef.italic ? "italic" : "normal", color: `#${accentHex}` }}>${price}</span>
               </div>
-              <p className="rv-mono mt-2" style={{ fontSize: 9.5, color: TEXT_MUTED }}>Referencial: $5 solo con fotos · $7 con fotos + video.</p>
+              <p className="rv-mono mt-2" style={{ fontSize: 9.5, color: TEXT_MUTED }}>Referencial: $4 solo con fotos · $5 con fotos + video.</p>
 
               <button
                 onClick={handleConfirm}
