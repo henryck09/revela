@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   CheckCircle2, ChevronDown, Copy, ExternalLink, LogOut, Mail,
-  RefreshCw, Search, Send, Trash2, XCircle,
+  Pencil, RefreshCw, Search, Send, Trash2, XCircle,
 } from "lucide-react";
 import { getSession, onAuthChange, signOut } from "../services/auth";
 import { listOrders, approveOrder, rejectOrder, deleteOrder, sendOrderEmail } from "../services/orders";
 import { PAGE_BG, PANEL_BG, TEXT_DARK, TEXT_MUTED, INPUT_BG, INPUT_BORDER } from "../lib/capsuleConfig";
+import EditOrderModal from "../components/EditOrderModal";
 
 const STATUS_COLORS = { PENDIENTE: "#C9973F", APROBADO: "#4C9A6A", RECHAZADO: "#B5545F" };
 const dateFormatter = new Intl.DateTimeFormat("es-EC", { dateStyle: "medium", timeStyle: "short" });
@@ -20,6 +21,7 @@ export default function AdminDashboard() {
   const [busyId, setBusyId] = useState(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("TODOS");
+  const [editingOrder, setEditingOrder] = useState(null);
   const navigate = useNavigate();
 
   const load = useCallback(async () => {
@@ -114,12 +116,20 @@ export default function AdminDashboard() {
 
         <SectionTitle>Por aprobar ({pending.length})</SectionTitle>
         <div className="flex flex-col gap-3 mb-10">
-          {pending.length ? pending.map((order) => <OrderCard key={order.id} order={order} busy={busyId === order.id} onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete} />) : <Empty>No hay pedidos pendientes con estos filtros.</Empty>}
+          {pending.length ? pending.map((order) => <OrderCard key={order.id} order={order} busy={busyId === order.id} onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete} onEdit={() => setEditingOrder(order)} />) : <Empty>No hay pedidos pendientes con estos filtros.</Empty>}
         </div>
 
         <SectionTitle>Historial por periodo</SectionTitle>
-        {historyGroups.length ? historyGroups.map((group) => <section key={group.label} className="mb-8"><h3 className="rv-mono uppercase mb-3" style={{ fontSize: 11, letterSpacing: "0.08em", color: TEXT_MUTED }}>{group.label} ({group.orders.length})</h3><div className="flex flex-col gap-3">{group.orders.map((order) => <OrderCard key={order.id} order={order} busy={busyId === order.id} onResend={handleResend} onDelete={handleDelete} />)}</div></section>) : <Empty>No hay pedidos en el historial con estos filtros.</Empty>}
+        {historyGroups.length ? historyGroups.map((group) => <section key={group.label} className="mb-8"><h3 className="rv-mono uppercase mb-3" style={{ fontSize: 11, letterSpacing: "0.08em", color: TEXT_MUTED }}>{group.label} ({group.orders.length})</h3><div className="flex flex-col gap-3">{group.orders.map((order) => <OrderCard key={order.id} order={order} busy={busyId === order.id} onResend={handleResend} onDelete={handleDelete} onEdit={() => setEditingOrder(order)} />)}</div></section>) : <Empty>No hay pedidos en el historial con estos filtros.</Empty>}
       </div>
+
+      {editingOrder && (
+        <EditOrderModal
+          order={editingOrder}
+          onClose={() => setEditingOrder(null)}
+          onSaved={() => { setEditingOrder(null); load(); }}
+        />
+      )}
     </div>
   );
 }
@@ -128,11 +138,11 @@ function Stat({ label, value, color = TEXT_DARK }) { return <div className="roun
 function SectionTitle({ children }) { return <h2 className="rv-mono uppercase mb-3" style={{ fontSize: 12, letterSpacing: "0.08em", color: TEXT_MUTED }}>{children}</h2>; }
 function Empty({ children }) { return <p className="mb-8" style={{ color: TEXT_MUTED, fontSize: 13 }}>{children}</p>; }
 
-function OrderCard({ order, busy, onApprove, onReject, onResend, onDelete }) {
+function OrderCard({ order, busy, onApprove, onReject, onResend, onDelete, onEdit }) {
   const mediaCount = (order.photos?.length || 0) + Number(Boolean(order.video_url)) + Number(Boolean(order.song_url)) + Number(Boolean(order.custom_background_url));
   async function copyEmail() { try { await navigator.clipboard.writeText(order.email); toast.success("Correo copiado."); } catch { toast.error("No se pudo copiar el correo."); } }
   return <article className="rounded-xl p-4" style={{ background: PANEL_BG, border: `1px solid ${INPUT_BORDER}` }}>
-    <div className="flex items-start justify-between gap-3 mb-2"><div><p className="rv-mono" style={{ fontSize: 12, color: TEXT_MUTED }}>{order.order_code}</p><p style={{ fontSize: 15, fontWeight: 600 }}>{order.full_name}</p></div><div className="flex items-center gap-2"><span className="rv-mono uppercase" style={{ fontSize: 10, color: STATUS_COLORS[order.payment_status] || TEXT_MUTED }}>{order.payment_status}</span><button aria-label="Eliminar pedido" title="Eliminar pedido y archivos" onClick={() => onDelete(order)} disabled={busy} style={{ color: "#B5545F" }}><Trash2 size={16} /></button></div></div>
+    <div className="flex items-start justify-between gap-3 mb-2"><div><p className="rv-mono" style={{ fontSize: 12, color: TEXT_MUTED }}>{order.order_code}</p><p style={{ fontSize: 15, fontWeight: 600 }}>{order.full_name}</p></div><div className="flex items-center gap-2"><span className="rv-mono uppercase" style={{ fontSize: 10, color: STATUS_COLORS[order.payment_status] || TEXT_MUTED }}>{order.payment_status}</span><button aria-label="Editar pedido" title="Editar fotos, video, texto o música" onClick={onEdit} disabled={busy} style={{ color: TEXT_MUTED }}><Pencil size={16} /></button><button aria-label="Eliminar pedido" title="Eliminar pedido y archivos" onClick={() => onDelete(order)} disabled={busy} style={{ color: "#B5545F" }}><Trash2 size={16} /></button></div></div>
     <div className="grid md:grid-cols-2 gap-x-6 gap-y-1" style={{ color: TEXT_MUTED, fontSize: 12 }}><p className="flex items-center gap-1"><Mail size={12} /> {order.email}<button onClick={copyEmail} title="Copiar correo" className="ml-1"><Copy size={11} /></button></p><p>{order.whatsapp}</p><p>Creado: {dateFormatter.format(new Date(order.created_at))}</p><p>Ocasión: {order.occasion} · Precio: ${order.price} · {mediaCount} archivo(s)</p></div>
     <div className="flex flex-wrap items-center gap-2 mt-3"><a href={`/m/${order.order_code}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 rounded-full px-3 py-1.5" style={{ background: "#F0EBDD", color: TEXT_DARK, fontSize: 12 }}><ExternalLink size={12} /> ver cápsula</a>{order.payment_status === "PENDIENTE" && <><button onClick={() => onApprove(order.id)} disabled={busy} className="flex items-center gap-1 rounded-full px-3 py-1.5 disabled:opacity-60" style={{ background: "#4C9A6A", color: "#FFF", fontSize: 12 }}><CheckCircle2 size={13} /> Aprobar y enviar</button><button onClick={() => onReject(order.id)} disabled={busy} className="flex items-center gap-1 rounded-full px-3 py-1.5 disabled:opacity-60" style={{ background: "#B5545F", color: "#FFF", fontSize: 12 }}><XCircle size={13} /> Rechazar</button></>}{order.payment_status === "APROBADO" && <button onClick={() => onResend(order.id)} disabled={busy} className="flex items-center gap-1 rounded-full px-3 py-1.5 disabled:opacity-60" style={{ background: "#30264D", color: "#FFF", fontSize: 12 }}><Send size={12} /> Reenviar tarjeta</button>}</div>
   </article>;

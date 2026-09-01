@@ -90,3 +90,16 @@ export async function deleteOrder(orderId) {
   if (data?.error) throw new Error(typeof data.error === "string" ? data.error : JSON.stringify(data.error));
   return data;
 }
+
+/** Actualiza el contenido de un pedido (texto, fotos, video, música) */
+export async function updateOrder(orderId, fields) {
+  const { data, error } = await supabase
+    .from("orders")
+    .update(fields)
+    .eq("id", orderId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
