@@ -11,6 +11,7 @@ import {
 import CapsuleStory from "../components/CapsuleStory";
 import { createOrder } from "../services/orders";
 import { uploadPhotos, uploadFile } from "../services/mediaUpload";
+import PreviewWatermark from "../components/PreviewWatermark";
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "";
 const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
@@ -487,14 +488,17 @@ export default function CreatorPage() {
               )}
 
               {revealed && hasMainPhoto && (
-                <CapsuleStory
-                  onBack={reset}
-                  order={{
-                    emoji: meta.emoji, accentHex, fontDef, specialDate, occasion, mainText,
-                    youtubeUrl, youtubeStart, songUrl: song?.url, photos, videoUrl: video?.url,
+                <div className="relative w-full h-full">
+                  <CapsuleStory
+                    onBack={reset}
+                    order={{
+                      emoji: meta.emoji, accentHex, fontDef, specialDate, occasion, mainText,
+                      youtubeUrl, youtubeStart, songUrl: song?.url, photos, videoUrl: video?.url,
                     closingText, storyBg,
                   }}
                 />
+                <PreviewWatermark message="VISTA PREVIA · REALIZA EL PAGO" />
+              </div>
               )}
             </div>
 
