@@ -6,7 +6,7 @@ import {
   Pencil, RefreshCw, Search, Send, Trash2, XCircle,
 } from "lucide-react";
 import { getSession, onAuthChange, signOut } from "../services/auth";
-import { listOrders, approveOrder, rejectOrder, deleteOrder, sendOrderEmail } from "../services/orders";
+import { listOrders, approveOrder, rejectOrder, deleteOrder, sendOrderEmail, cleanupOrphans } from "../services/orders";
 import { PAGE_BG, PANEL_BG, TEXT_DARK, TEXT_MUTED, INPUT_BG, INPUT_BORDER } from "../lib/capsuleConfig";
 import EditOrderModal from "../components/EditOrderModal";
 
@@ -87,6 +87,19 @@ export default function AdminDashboard() {
     finally { setBusyId(null); }
   }
 
+  async function handleCleanup() {
+    setLoading(true);
+    try {
+      const result = await cleanupOrphans();
+      toast.success(`Limpieza lista: ${result.deleted} archivo(s) eliminado(s), ${result.freedMB}MB liberados.`, { duration: 6000 });
+      load();
+    } catch {
+      toast.error("No se pudo limpiar el almacenamiento.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (checkingAuth) return null;
   const pending = filteredOrders.filter((order) => order.payment_status === "PENDIENTE");
   const historyGroups = groupOrders(filteredOrders.filter((order) => order.payment_status !== "PENDIENTE"));
@@ -97,6 +110,7 @@ export default function AdminDashboard() {
         <header className="flex flex-wrap items-center justify-between gap-4 mb-7">
           <div><p className="rv-mono uppercase" style={{ fontSize: 10, letterSpacing: "0.12em", color: TEXT_MUTED }}>Revela / administración</p><h1 style={{ fontSize: 26, fontWeight: 600 }}>Control de pedidos</h1></div>
           <div className="flex items-center gap-3">
+            <button onClick={handleCleanup} className="flex items-center gap-1 rv-mono" style={{ fontSize: 12, color: TEXT_MUTED }}><Trash2 size={13} /> limpiar espacio</button>
             <button onClick={load} className="flex items-center gap-1 rv-mono" style={{ fontSize: 12, color: TEXT_MUTED }}><RefreshCw size={13} className={loading ? "animate-spin" : ""} /> actualizar</button>
             <button onClick={async () => { await signOut(); navigate("/admin/login"); }} className="flex items-center gap-1 rv-mono" style={{ fontSize: 12, color: TEXT_MUTED }}><LogOut size={13} /> salir</button>
           </div>

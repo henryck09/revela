@@ -103,3 +103,10 @@ export async function updateOrder(orderId, fields) {
   if (error) throw error;
   return data;
 }
+
+/** Borra de Storage los archivos que no pertenecen a ningún pedido actual */
+export async function cleanupOrphans() {
+  const { data, error } = await supabase.functions.invoke("cleanup-orphans", {});
+  if (error) throw error;
+  return data;
+}
