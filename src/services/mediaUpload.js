@@ -1,23 +1,35 @@
 import { supabase } from "./supabase";
 
-const BUCKET = "capsule-media";
+/**
+ * Pide a la Edge Function r2-presign un permiso temporal de subida hacia
+ * Cloudflare R2, y devuelve tanto la URL de subida (firmada, de un solo uso)
+ * como la URL pública final donde va a quedar el archivo.
+ */
+async function getPresignedUpload(file, folder) {
+  const extension = (file.name.split(".").pop() || "bin").toLowerCase();
+  const { data, error } = await supabase.functions.invoke("r2-presign", {
+    body: { folder, extension, contentType: file.type, size: file.size },
+  });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data; // { uploadUrl, publicUrl }
+}
 
 /**
- * Sube un archivo al bucket público "capsule-media" y devuelve su URL pública.
+ * Sube un archivo a Cloudflare R2 y devuelve su URL pública.
  * folder ayuda a organizar: p.ej. "photos", "videos", "songs", "backgrounds".
  */
 export async function uploadFile(file, folder) {
-  const ext = file.name.split(".").pop();
-  const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+  const { uploadUrl, publicUrl } = await getPresignedUpload(file, folder);
 
-  const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
-    cacheControl: "3600",
-    upsert: false,
+  const response = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: file.type ? { "Content-Type": file.type } : {},
+    body: file,
   });
-  if (error) throw error;
+  if (!response.ok) throw new Error("No se pudo subir el archivo.");
 
-  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-  return data.publicUrl;
+  return publicUrl;
 }
 
 /** Sube varias fotos (array de File) y devuelve [{ url, caption }] preservando el orden y los captions dados */
