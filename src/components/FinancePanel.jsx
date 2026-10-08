@@ -4,6 +4,8 @@ import { PANEL_BG, TEXT_DARK, TEXT_MUTED, INPUT_BG, INPUT_BORDER } from "../lib/
 
 const DAY_SHORT = ["L", "M", "X", "J", "V", "S", "D"];
 const fmtDay = new Intl.DateTimeFormat("es-EC", { day: "numeric", month: "short" });
+const fmtFullDay = new Intl.DateTimeFormat("es-EC", { weekday: "long", day: "numeric", month: "short" });
+const fmtTime = new Intl.DateTimeFormat("es-EC", { hour: "2-digit", minute: "2-digit" });
 const fmtMonth = new Intl.DateTimeFormat("es-EC", { month: "long", year: "numeric" });
 const fmtMonthShort = new Intl.DateTimeFormat("es-EC", { month: "short" });
 
@@ -19,6 +21,13 @@ const inRange = (o, r) => { const d = paidDate(o); return d >= r.start && d < r.
 function getRange(mode, offset) {
   const now = new Date();
   if (mode === "total") return { start: new Date(0), end: new Date(8.64e15), label: "Todo el tiempo" };
+  if (mode === "day") {
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() + offset);
+    const end = new Date(start); end.setDate(end.getDate() + 1);
+    return { start, end, label: fmtFullDay.format(start) };
+  }
   if (mode === "week") {
     const start = new Date(now);
     const day = (start.getDay() + 6) % 7;
@@ -36,7 +45,7 @@ function getRange(mode, offset) {
 const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 export default function FinancePanel({ orders }) {
-  const [mode, setMode] = useState("week"); // week | month | total
+  const [mode, setMode] = useState("week"); // day | week | month | total
   const [offset, setOffset] = useState(0);
 
   const approved = useMemo(() => orders.filter((o) => o.payment_status === "APROBADO"), [orders]);
@@ -69,6 +78,13 @@ export default function FinancePanel({ orders }) {
   }, [approved]);
 
   const buckets = useMemo(() => {
+    if (mode === "day") {
+      return Array.from({ length: 24 }, (_, h) => ({
+        label: h % 3 === 0 ? String(h) : "",
+        title: `${String(h).padStart(2, "0")}:00`,
+        value: sum(current.filter((o) => paidDate(o).getHours() === h)),
+      }));
+    }
     if (mode === "week") {
       return Array.from({ length: 7 }, (_, i) => {
         const d = new Date(range.start); d.setDate(d.getDate() + i);
@@ -118,10 +134,10 @@ export default function FinancePanel({ orders }) {
   return (
     <section className="rounded-xl p-4 mb-8" style={{ background: PANEL_BG, border: `1px solid ${INPUT_BORDER}` }}>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div className="flex gap-2">{modeBtn("week", "Semana")}{modeBtn("month", "Mes")}{modeBtn("total", "Total")}</div>
+        <div className="flex gap-2">{modeBtn("day", "Día")}{modeBtn("week", "Semana")}{modeBtn("month", "Mes")}{modeBtn("total", "Total")}</div>
         <div className="flex items-center gap-2">
           <button onClick={() => setOffset((o) => o - 1)} disabled={mode === "total"} className="disabled:opacity-30" aria-label="Periodo anterior"><ChevronLeft size={18} color={TEXT_MUTED} /></button>
-          <span className="rv-mono capitalize text-center" style={{ fontSize: 12, color: TEXT_DARK, minWidth: 150 }}>{range.label}</span>
+          <span className="rv-mono capitalize text-center" style={{ fontSize: 12, color: TEXT_DARK, minWidth: 170 }}>{range.label}</span>
           <button onClick={() => setOffset((o) => o + 1)} disabled={mode === "total" || offset >= 0} className="disabled:opacity-30" aria-label="Periodo siguiente"><ChevronRight size={18} color={TEXT_MUTED} /></button>
         </div>
       </div>
@@ -130,7 +146,7 @@ export default function FinancePanel({ orders }) {
         <Card label="Ingresos" value={money(total)} color="#4C9A6A" big>
           {diff !== null && (
             <p className="rv-mono" style={{ fontSize: 10, color: diff >= 0 ? "#4C9A6A" : "#B5545F", marginTop: 3 }}>
-              {diff >= 0 ? "▲" : "▼"} {money(Math.abs(diff))}{pct !== null ? ` (${Math.abs(pct).toFixed(0)}%)` : ""} vs {mode === "week" ? "semana" : "mes"} anterior
+              {diff >= 0 ? "▲" : "▼"} {money(Math.abs(diff))}{pct !== null ? ` (${Math.abs(pct).toFixed(0)}%)` : ""} vs {{ day: "día", week: "semana", month: "mes" }[mode]} anterior
             </p>
           )}
         </Card>
@@ -157,6 +173,26 @@ export default function FinancePanel({ orders }) {
         {buckets.map((b, i) => <span key={i} className="flex-1 text-center rv-mono" style={{ fontSize: 9, color: TEXT_MUTED }}>{b.label}</span>)}
       </div>
       {mode === "total" && <p className="rv-mono mt-1" style={{ fontSize: 9, color: TEXT_MUTED }}>Gráfico: últimos 12 meses</p>}
+      {mode === "day" && <p className="rv-mono mt-1" style={{ fontSize: 9, color: TEXT_MUTED }}>Gráfico: ingresos por hora</p>}
+
+      {mode === "day" && (
+        <div className="mt-4">
+          {current.length ? (
+            <ul className="flex flex-col gap-1" style={{ fontSize: 12, color: TEXT_DARK }}>
+              {[...current].sort((a, b) => paidDate(a) - paidDate(b)).map((o) => (
+                <li key={o.id} className="flex items-center justify-between gap-3 rounded-lg px-3 py-2" style={{ background: INPUT_BG, border: `1px solid ${INPUT_BORDER}` }}>
+                  <span className="rv-mono" style={{ color: TEXT_MUTED, fontSize: 11 }}>{o.approved_at ? fmtTime.format(paidDate(o)) : "--:--"}</span>
+                  <span className="flex-1 truncate">{o.full_name} <span className="rv-mono" style={{ color: TEXT_MUTED, fontSize: 10 }}>{o.order_code}</span></span>
+                  <span className="rv-mono" style={{ color: TEXT_MUTED, fontSize: 11 }}>{isPro(o) ? "Pro" : "Básica"}</span>
+                  <b>{money(price(o))}</b>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p style={{ fontSize: 12, color: TEXT_MUTED }}>No hubo pagos aprobados este día.</p>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
         <details>
