@@ -444,7 +444,7 @@ export default function CreatorPage() {
                   <span style={{ fontSize: 15, fontWeight: 600, color: TEXT_DARK }}>{planName}</span>
                   <span className="rv-mono" style={{ fontSize: 12, color: `#${accentHex}` }}>{video ? "Fotos + video" : "Solo fotos"}</span>
                 </div>
-                <p className="rv-mono mt-2" style={{ fontSize: 9.5, color: TEXT_MUTED }}>Versión Básica (solo fotos) · Versión Pro (fotos + video).</p>
+                <p className="rv-mono mt-2" style={{ fontSize: 9.5, color: TEXT_MUTED }}>Versión Básica (fotos, canción, mensajes) · Versión Pro (fotos, canción, mensajes y video).</p>
 
               <button
                 onClick={handleConfirm}
