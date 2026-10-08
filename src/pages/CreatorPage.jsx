@@ -440,11 +440,11 @@ export default function CreatorPage() {
                 <li>• Canción: <span style={{ color: TEXT_DARK }}>{youtubeId ? "sí" : "no"}</span></li>
                 <li>• Video: <span style={{ color: TEXT_DARK }}>{video ? "sí (incluido)" : "no"}</span></li>
               </ul>
-              <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: `1px solid #${accentHex}33` }}>
-                <span style={{ fontSize: 13, color: TEXT_DARK }}>{video ? "Fotos + video" : "Solo fotos"}</span>
-                <span style={{ fontSize: 22, fontFamily: fontDef.css, fontStyle: fontDef.italic ? "italic" : "normal", color: `#${accentHex}` }}>${price}</span>
-              </div>
-              <p className="rv-mono mt-2" style={{ fontSize: 9.5, color: TEXT_MUTED }}>Referencial: $4 solo con fotos · $5 con fotos + video.</p>
+                <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: `1px solid #${accentHex}33` }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: TEXT_DARK }}>{planName}</span>
+                  <span className="rv-mono" style={{ fontSize: 12, color: `#${accentHex}` }}>{video ? "Fotos + video" : "Solo fotos"}</span>
+                </div>
+                <p className="rv-mono mt-2" style={{ fontSize: 9.5, color: TEXT_MUTED }}>Versión Básica (solo fotos) · Versión Pro (fotos + video).</p>
 
               <button
                 onClick={handleConfirm}
