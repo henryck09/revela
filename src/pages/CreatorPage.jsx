@@ -60,6 +60,7 @@ export default function CreatorPage() {
   const youtubeId = useMemo(() => extractYoutubeId(youtubeUrl), [youtubeUrl]);
   const years = yearsSince(specialDate);
   const price = video ? 5 : 4;
+  const planName = video ? "Versión Pro" : "Versión Básica";
 
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&qzone=1&data=${encodeURIComponent(SITE_URL + "/m/" + slug)}&bgcolor=FFFFFF&color=${accentHex}`;
 
@@ -205,7 +206,7 @@ export default function CreatorPage() {
       const message =
         `Hola! Quiero confirmar el pago de mi cápsula Revela 🎁\n` +
         `Código de pedido: ${order.order_code}\n` +
-        `Monto: $${price}\n` +
+        `Plan: ${planName}\n` +
         `Te envío la captura de pago a continuación.`;
       const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
       setTimeout(() => { window.location.href = waUrl; }, 900);

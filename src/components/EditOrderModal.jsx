@@ -1,9 +1,9 @@
 import { useState, useRef } from "react";
 import toast from "react-hot-toast";
-import { X, Upload, Loader2, Film, Music2 } from "lucide-react";
+import { X, Upload, Loader2, Film, Music2, Droplet } from "lucide-react";
 import { updateOrder } from "../services/orders";
 import { uploadFile } from "../services/mediaUpload";
-import { PANEL_BG, INPUT_BG, INPUT_BORDER, TEXT_DARK, TEXT_MUTED } from "../lib/capsuleConfig";
+import { BACKGROUNDS, PANEL_BG, INPUT_BG, INPUT_BORDER, TEXT_DARK, TEXT_MUTED } from "../lib/capsuleConfig";
 
 const MAX_PHOTOS = 4;
 const MAX_VIDEO_MB = 20;
@@ -13,8 +13,8 @@ const mb = (bytes) => bytes / (1024 * 1024);
 
 /**
  * Ventana modal para editar un pedido existente desde el panel admin:
- * texto principal/final, canción (YouTube o audio propio), fotos y video.
- * Los archivos nuevos se suben a Storage al guardar; los que no se tocan
+ * texto principal/final, fondo (color o foto), canción (YouTube o audio propio),
+ * fotos y video. Los archivos nuevos se suben al guardar; los que no se tocan
  * conservan su URL original (no se vuelven a subir).
  */
 export default function EditOrderModal({ order, onClose, onSaved }) {
@@ -29,11 +29,26 @@ export default function EditOrderModal({ order, onClose, onSaved }) {
   const [song, setSong] = useState(order.song_url ? { url: order.song_url, file: null, existing: true } : null);
   const [removeVideo, setRemoveVideo] = useState(false);
   const [removeSong, setRemoveSong] = useState(false);
+  const [background, setBackground] = useState(order.background || "crema"); // clave de color o "custom"
+  const [customBg, setCustomBg] = useState(
+    order.custom_background_url ? { url: order.custom_background_url, file: null } : null
+  );
   const [saving, setSaving] = useState(false);
 
   const photoInputRef = useRef(null);
   const videoInputRef = useRef(null);
   const songInputRef = useRef(null);
+  const bgInputRef = useRef(null);
+
+  function handleBgImage(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (mb(file.size) > MAX_PHOTO_MB) { toast.error(`La imagen pesa demasiado (máx. ${MAX_PHOTO_MB}MB).`); return; }
+    const reader = new FileReader();
+    reader.onload = () => { setCustomBg({ url: reader.result, file }); setBackground("custom"); };
+    reader.readAsDataURL(file);
+  }
 
   function handleAddPhoto(e) {
     const files = Array.from(e.target.files || []).slice(0, MAX_PHOTOS - photos.length);
@@ -70,6 +85,10 @@ export default function EditOrderModal({ order, onClose, onSaved }) {
   }
 
   async function handleSave() {
+    if (background === "custom" && !customBg) {
+      toast.error("Sube una foto para el fondo o elige un color.");
+      return;
+    }
     setSaving(true);
     const toastId = toast.loading("Guardando cambios...");
     try {
@@ -91,6 +110,12 @@ export default function EditOrderModal({ order, onClose, onSaved }) {
       if (removeSong) songUrl = null;
       else if (song?.file) songUrl = await uploadFile(song.file, "songs");
 
+      // Fondo: si es foto, sube la nueva (o conserva la actual); si es color, no guarda imagen
+      let customBackgroundUrl = null;
+      if (background === "custom") {
+        customBackgroundUrl = customBg.file ? await uploadFile(customBg.file, "backgrounds") : customBg.url;
+      }
+
       await updateOrder(order.id, {
         main_text: mainText,
         closing_text: closingText,
@@ -99,6 +124,8 @@ export default function EditOrderModal({ order, onClose, onSaved }) {
         photos: finalPhotos,
         video_url: videoUrl,
         song_url: songUrl,
+        background,
+        custom_background_url: customBackgroundUrl,
       });
 
       toast.success("Pedido actualizado.", { id: toastId });
@@ -132,6 +159,31 @@ export default function EditOrderModal({ order, onClose, onSaved }) {
           className="w-full rounded-lg px-3 py-2 mb-4 mt-1 outline-none"
           style={{ background: INPUT_BG, border: `1px solid ${INPUT_BORDER}`, fontSize: 13, color: TEXT_DARK }}
         />
+
+        <FieldLabel>Fondo del mensaje (color o foto)</FieldLabel>
+        <div className="flex gap-2 flex-wrap mb-4 mt-2">
+          {Object.entries(BACKGROUNDS).map(([key, b]) => (
+            <button
+              key={key} onClick={() => setBackground(key)} title={b.label} className="rounded-lg"
+              style={{ width: 40, height: 40, background: b.css, outline: background === key ? `2px solid ${TEXT_DARK}` : `1px solid ${INPUT_BORDER}`, outlineOffset: 2 }}
+            />
+          ))}
+          {customBg && (
+            <button
+              onClick={() => setBackground("custom")} title="Foto de fondo" className="rounded-lg overflow-hidden"
+              style={{ width: 40, height: 40, outline: background === "custom" ? `2px solid ${TEXT_DARK}` : `1px solid ${INPUT_BORDER}`, outlineOffset: 2 }}
+            >
+              <img src={customBg.url} alt="" className="w-full h-full object-cover" />
+            </button>
+          )}
+          <button
+            onClick={() => bgInputRef.current?.click()} title={customBg ? "Cambiar foto de fondo" : "Subir foto de fondo"}
+            className="rounded-lg flex items-center justify-center" style={{ width: 40, height: 40, border: `1px dashed ${TEXT_MUTED}`, color: TEXT_MUTED }}
+          >
+            <Droplet size={15} />
+          </button>
+        </div>
+        <input ref={bgInputRef} type="file" accept="image/*" onChange={handleBgImage} className="hidden" />
 
         <FieldLabel>Canción (YouTube)</FieldLabel>
         <div className="flex items-center gap-2 mb-4 mt-1">
