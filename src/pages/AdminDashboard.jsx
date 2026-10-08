@@ -9,6 +9,7 @@ import { getSession, onAuthChange, signOut } from "../services/auth";
 import { listOrders, approveOrder, rejectOrder, deleteOrder, sendOrderEmail, cleanupOrphans } from "../services/orders";
 import { PAGE_BG, PANEL_BG, TEXT_DARK, TEXT_MUTED, INPUT_BG, INPUT_BORDER } from "../lib/capsuleConfig";
 import EditOrderModal from "../components/EditOrderModal";
+import FinancePanel from "../components/FinancePanel";
 
 const STATUS_COLORS = { PENDIENTE: "#C9973F", APROBADO: "#4C9A6A", RECHAZADO: "#B5545F" };
 const dateFormatter = new Intl.DateTimeFormat("es-EC", { dateStyle: "medium", timeStyle: "short" });
@@ -44,13 +45,6 @@ export default function AdminDashboard() {
       .some((value) => String(value || "").toLowerCase().includes(needle));
     return matchesQuery && (filter === "TODOS" || order.payment_status === filter);
   }), [orders, query, filter]);
-
-  const stats = useMemo(() => ({
-    total: orders.length,
-    pending: orders.filter((order) => order.payment_status === "PENDIENTE").length,
-    approved: orders.filter((order) => order.payment_status === "APROBADO").length,
-    revenue: orders.filter((order) => order.payment_status === "APROBADO").reduce((sum, order) => sum + Number(order.price || 0), 0),
-  }), [orders]);
 
   async function handleApprove(id) {
     setBusyId(id);
@@ -116,12 +110,7 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-7">
-          <Stat label="Total pedidos" value={stats.total} />
-          <Stat label="Pendientes" value={stats.pending} color="#C9973F" />
-          <Stat label="Aprobados" value={stats.approved} color="#4C9A6A" />
-          <Stat label="Ingresos aprobados" value={`$${stats.revenue.toFixed(2)}`} color="#30264D" />
-        </section>
+        <FinancePanel orders={orders} />
 
         <section className="rounded-xl p-3 mb-8 flex flex-col md:flex-row gap-3" style={{ background: PANEL_BG, border: `1px solid ${INPUT_BORDER}` }}>
           <label className="flex-1 flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: INPUT_BG, border: `1px solid ${INPUT_BORDER}` }}><Search size={15} color={TEXT_MUTED} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nombre, correo, WhatsApp o código" className="w-full bg-transparent outline-none" style={{ fontSize: 13 }} /></label>
@@ -148,7 +137,6 @@ export default function AdminDashboard() {
   );
 }
 
-function Stat({ label, value, color = TEXT_DARK }) { return <div className="rounded-xl p-4" style={{ background: PANEL_BG, border: `1px solid ${INPUT_BORDER}` }}><p className="rv-mono uppercase" style={{ fontSize: 9, letterSpacing: "0.08em", color: TEXT_MUTED }}>{label}</p><p style={{ marginTop: 5, fontSize: 22, fontWeight: 600, color }}>{value}</p></div>; }
 function SectionTitle({ children }) { return <h2 className="rv-mono uppercase mb-3" style={{ fontSize: 12, letterSpacing: "0.08em", color: TEXT_MUTED }}>{children}</h2>; }
 function Empty({ children }) { return <p className="mb-8" style={{ color: TEXT_MUTED, fontSize: 13 }}>{children}</p>; }
 

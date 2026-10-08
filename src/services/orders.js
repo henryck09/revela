@@ -56,7 +56,7 @@ export async function listOrders() {
 export async function approveOrder(orderId) {
   const { data, error } = await supabase
     .from("orders")
-    .update({ payment_status: "APROBADO", status: "COMPLETADO" })
+    .update({ payment_status: "APROBADO", status: "COMPLETADO", approved_at: new Date().toISOString() })
     .eq("id", orderId)
     .select()
     .single();
