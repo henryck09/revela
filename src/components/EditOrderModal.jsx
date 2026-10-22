@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import toast from "react-hot-toast";
-import { X, Upload, Loader2, Film, Music2, Droplet } from "lucide-react";
+import { X, Upload, Loader2, Film, Music2, Droplet, Calendar } from "lucide-react";
 import { updateOrder } from "../services/orders";
 import { uploadFile } from "../services/mediaUpload";
 import { BACKGROUNDS, PANEL_BG, INPUT_BG, INPUT_BORDER, TEXT_DARK, TEXT_MUTED } from "../lib/capsuleConfig";
@@ -20,6 +20,7 @@ const mb = (bytes) => bytes / (1024 * 1024);
 export default function EditOrderModal({ order, onClose, onSaved }) {
   const [mainText, setMainText] = useState(order.main_text || "");
   const [closingText, setClosingText] = useState(order.closing_text || "");
+  const [specialDate, setSpecialDate] = useState((order.special_date || "").slice(0, 10)); // YYYY-MM-DD
   const [youtubeUrl, setYoutubeUrl] = useState(order.youtube_url || "");
   const [youtubeStart, setYoutubeStart] = useState(order.youtube_start || 0);
   const [photos, setPhotos] = useState(
@@ -119,6 +120,7 @@ export default function EditOrderModal({ order, onClose, onSaved }) {
       await updateOrder(order.id, {
         main_text: mainText,
         closing_text: closingText,
+        special_date: specialDate || null,
         youtube_url: youtubeUrl || null,
         youtube_start: youtubeStart || 0,
         photos: finalPhotos,
@@ -159,6 +161,18 @@ export default function EditOrderModal({ order, onClose, onSaved }) {
           className="w-full rounded-lg px-3 py-2 mb-4 mt-1 outline-none"
           style={{ background: INPUT_BG, border: `1px solid ${INPUT_BORDER}`, fontSize: 13, color: TEXT_DARK }}
         />
+
+        <FieldLabel>Fecha especial</FieldLabel>
+        <div className="flex items-center gap-2 mb-4 mt-1">
+          <Calendar size={14} color={TEXT_MUTED} />
+          <input
+            type="date" value={specialDate} onChange={(e) => setSpecialDate(e.target.value)}
+            className="rounded-lg px-3 py-2 outline-none" style={{ background: INPUT_BG, border: `1px solid ${INPUT_BORDER}`, fontSize: 13, color: TEXT_DARK }}
+          />
+          {specialDate && (
+            <button onClick={() => setSpecialDate("")} className="rv-mono" style={{ fontSize: 11, color: TEXT_MUTED }}>quitar fecha</button>
+          )}
+        </div>
 
         <FieldLabel>Fondo del mensaje (color o foto)</FieldLabel>
         <div className="flex gap-2 flex-wrap mb-4 mt-2">

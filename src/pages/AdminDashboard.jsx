@@ -10,6 +10,7 @@ import { listOrders, approveOrder, rejectOrder, deleteOrder, sendOrderEmail, cle
 import { PAGE_BG, PANEL_BG, TEXT_DARK, TEXT_MUTED, INPUT_BG, INPUT_BORDER } from "../lib/capsuleConfig";
 import EditOrderModal from "../components/EditOrderModal";
 import FinancePanel from "../components/FinancePanel";
+import { countryOf } from "../lib/countries";
 
 const STATUS_COLORS = { PENDIENTE: "#C9973F", APROBADO: "#4C9A6A", RECHAZADO: "#B5545F" };
 const dateFormatter = new Intl.DateTimeFormat("es-EC", { dateStyle: "medium", timeStyle: "short" });
@@ -22,6 +23,7 @@ export default function AdminDashboard() {
   const [busyId, setBusyId] = useState(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("TODOS");
+  const [country, setCountry] = useState("TODOS");
   const [editingOrder, setEditingOrder] = useState(null);
   const navigate = useNavigate();
 
@@ -43,8 +45,19 @@ export default function AdminDashboard() {
     const needle = query.trim().toLowerCase();
     const matchesQuery = !needle || [order.order_code, order.full_name, order.email, order.whatsapp]
       .some((value) => String(value || "").toLowerCase().includes(needle));
-    return matchesQuery && (filter === "TODOS" || order.payment_status === filter);
-  }), [orders, query, filter]);
+    const matchesCountry = country === "TODOS" || countryOf(order.whatsapp).key === country;
+    return matchesQuery && matchesCountry && (filter === "TODOS" || order.payment_status === filter);
+  }), [orders, query, filter, country]);
+
+  // Países presentes en los pedidos, del que más pedidos tiene al que menos
+  const countryOptions = useMemo(() => {
+    const map = new Map();
+    orders.forEach((order) => {
+      const c = countryOf(order.whatsapp);
+      map.set(c.key, { ...c, count: (map.get(c.key)?.count || 0) + 1 });
+    });
+    return [...map.values()].sort((a, b) => b.count - a.count);
+  }, [orders]);
 
   async function handleApprove(id) {
     setBusyId(id);
@@ -115,6 +128,7 @@ export default function AdminDashboard() {
         <section className="rounded-xl p-3 mb-8 flex flex-col md:flex-row gap-3" style={{ background: PANEL_BG, border: `1px solid ${INPUT_BORDER}` }}>
           <label className="flex-1 flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: INPUT_BG, border: `1px solid ${INPUT_BORDER}` }}><Search size={15} color={TEXT_MUTED} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nombre, correo, WhatsApp o código" className="w-full bg-transparent outline-none" style={{ fontSize: 13 }} /></label>
           <label className="relative flex items-center"><select value={filter} onChange={(event) => setFilter(event.target.value)} className="appearance-none rounded-lg px-3 py-2 pr-8 outline-none" style={{ background: INPUT_BG, border: `1px solid ${INPUT_BORDER}`, fontSize: 12, color: TEXT_DARK }}><option value="TODOS">Todos los estados</option><option value="PENDIENTE">Pendientes</option><option value="APROBADO">Aprobados</option><option value="RECHAZADO">Rechazados</option></select><ChevronDown size={14} className="absolute right-2 pointer-events-none" color={TEXT_MUTED} /></label>
+          <label className="relative flex items-center"><select value={country} onChange={(event) => setCountry(event.target.value)} className="appearance-none rounded-lg px-3 py-2 pr-8 outline-none" style={{ background: INPUT_BG, border: `1px solid ${INPUT_BORDER}`, fontSize: 12, color: TEXT_DARK }}><option value="TODOS">Todos los países</option>{countryOptions.map((c) => <option key={c.key} value={c.key}>{c.flag} {c.name} ({c.count})</option>)}</select><ChevronDown size={14} className="absolute right-2 pointer-events-none" color={TEXT_MUTED} /></label>
         </section>
 
         <SectionTitle>Por aprobar ({pending.length})</SectionTitle>
@@ -145,7 +159,7 @@ function OrderCard({ order, busy, onApprove, onReject, onResend, onDelete, onEdi
   async function copyEmail() { try { await navigator.clipboard.writeText(order.email); toast.success("Correo copiado."); } catch { toast.error("No se pudo copiar el correo."); } }
   return <article className="rounded-xl p-4" style={{ background: PANEL_BG, border: `1px solid ${INPUT_BORDER}` }}>
     <div className="flex items-start justify-between gap-3 mb-2"><div><p className="rv-mono" style={{ fontSize: 12, color: TEXT_MUTED }}>{order.order_code}</p><p style={{ fontSize: 15, fontWeight: 600 }}>{order.full_name}</p></div><div className="flex items-center gap-2"><span className="rv-mono uppercase" style={{ fontSize: 10, color: STATUS_COLORS[order.payment_status] || TEXT_MUTED }}>{order.payment_status}</span><button aria-label="Editar pedido" title="Editar fotos, video, texto o música" onClick={onEdit} disabled={busy} style={{ color: TEXT_MUTED }}><Pencil size={16} /></button><button aria-label="Eliminar pedido" title="Eliminar pedido y archivos" onClick={() => onDelete(order)} disabled={busy} style={{ color: "#B5545F" }}><Trash2 size={16} /></button></div></div>
-    <div className="grid md:grid-cols-2 gap-x-6 gap-y-1" style={{ color: TEXT_MUTED, fontSize: 12 }}><p className="flex items-center gap-1"><Mail size={12} /> {order.email}<button onClick={copyEmail} title="Copiar correo" className="ml-1"><Copy size={11} /></button></p><p>{order.whatsapp}</p><p>Creado: {dateFormatter.format(new Date(order.created_at))}</p><p>Ocasión: {order.occasion} · Precio: ${order.price} · {mediaCount} archivo(s)</p></div>
+    <div className="grid md:grid-cols-2 gap-x-6 gap-y-1" style={{ color: TEXT_MUTED, fontSize: 12 }}><p className="flex items-center gap-1"><Mail size={12} /> {order.email}<button onClick={copyEmail} title="Copiar correo" className="ml-1"><Copy size={11} /></button></p><p>{countryOf(order.whatsapp).flag} {order.whatsapp}</p><p>Creado: {dateFormatter.format(new Date(order.created_at))}</p><p>Ocasión: {order.occasion} · Precio: ${order.price} · {mediaCount} archivo(s)</p></div>
     <div className="flex flex-wrap items-center gap-2 mt-3"><a href={`/m/${order.order_code}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 rounded-full px-3 py-1.5" style={{ background: "#F0EBDD", color: TEXT_DARK, fontSize: 12 }}><ExternalLink size={12} /> ver cápsula</a>{order.payment_status === "PENDIENTE" && <><button onClick={() => onApprove(order.id)} disabled={busy} className="flex items-center gap-1 rounded-full px-3 py-1.5 disabled:opacity-60" style={{ background: "#4C9A6A", color: "#FFF", fontSize: 12 }}><CheckCircle2 size={13} /> Aprobar y enviar</button><button onClick={() => onReject(order.id)} disabled={busy} className="flex items-center gap-1 rounded-full px-3 py-1.5 disabled:opacity-60" style={{ background: "#B5545F", color: "#FFF", fontSize: 12 }}><XCircle size={13} /> Rechazar</button></>}{order.payment_status === "APROBADO" && <button onClick={() => onResend(order.id)} disabled={busy} className="flex items-center gap-1 rounded-full px-3 py-1.5 disabled:opacity-60" style={{ background: "#30264D", color: "#FFF", fontSize: 12 }}><Send size={12} /> Reenviar tarjeta</button>}</div>
   </article>;
 }

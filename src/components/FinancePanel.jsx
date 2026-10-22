@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { PANEL_BG, TEXT_DARK, TEXT_MUTED, INPUT_BG, INPUT_BORDER } from "../lib/capsuleConfig";
+import { countryOf } from "../lib/countries";
 
 const DAY_SHORT = ["L", "M", "X", "J", "V", "S", "D"];
 const fmtDay = new Intl.DateTimeFormat("es-EC", { day: "numeric", month: "short" });
@@ -66,6 +67,19 @@ export default function FinancePanel({ orders }) {
   const diff = prevTotal === null ? null : total - prevTotal;
   const pct = prevTotal ? (diff / prevTotal) * 100 : null;
 
+  // Ingresos del periodo agrupados por país (según el prefijo del WhatsApp)
+  const byCountry = useMemo(() => {
+    const map = new Map();
+    current.forEach((o) => {
+      const c = countryOf(o.whatsapp);
+      const row = map.get(c.key) || { ...c, count: 0, value: 0 };
+      row.count += 1;
+      row.value += price(o);
+      map.set(c.key, row);
+    });
+    return [...map.values()].sort((a, b) => b.value - a.value);
+  }, [current]);
+
   // Últimos 12 meses (se usa en la tabla y en el gráfico de la vista "Total")
   const monthly = useMemo(() => {
     const now = new Date();
@@ -107,9 +121,9 @@ export default function FinancePanel({ orders }) {
   function changeMode(next) { setMode(next); setOffset(0); }
 
   function exportCsv() {
-    const rows = [["Código", "Cliente", "Correo", "Fecha de pago", "Plan", "Precio"]];
+    const rows = [["Código", "Cliente", "Correo", "País", "Fecha de pago", "Plan", "Precio"]];
     [...current].sort((a, b) => paidDate(a) - paidDate(b)).forEach((o) => rows.push([
-      o.order_code, o.full_name, o.email, paidDate(o).toLocaleDateString("es-EC"), isPro(o) ? "Pro" : "Básica", price(o).toFixed(2),
+      o.order_code, o.full_name, o.email, countryOf(o.whatsapp).name, paidDate(o).toLocaleDateString("es-EC"), isPro(o) ? "Pro" : "Básica", price(o).toFixed(2),
     ]));
     const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
     const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }));
@@ -161,6 +175,23 @@ export default function FinancePanel({ orders }) {
         <span>Versión Básica: <b style={{ color: TEXT_DARK }}>{basic.length}</b> · {money(sum(basic))}</span>
         <span>Versión Pro: <b style={{ color: TEXT_DARK }}>{pro.length}</b> · {money(sum(pro))}</span>
       </div>
+
+      {byCountry.length > 0 && (
+        <div className="mb-4">
+          <p className="rv-mono uppercase mb-2" style={{ fontSize: 9, letterSpacing: "0.08em", color: TEXT_MUTED }}>Ingresos por país</p>
+          <div className="flex flex-col gap-1.5">
+            {byCountry.map((c) => (
+              <div key={c.key} className="flex items-center gap-2" style={{ fontSize: 12, color: TEXT_DARK }}>
+                <span className="truncate" style={{ width: 140 }}>{c.flag} {c.name}</span>
+                <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: INPUT_BORDER }}>
+                  <div style={{ width: `${total ? (c.value / total) * 100 : 0}%`, height: "100%", background: "#30264D" }} />
+                </div>
+                <span className="rv-mono text-right" style={{ fontSize: 11, color: TEXT_MUTED, minWidth: 96 }}>{c.count} · {money(c.value)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex items-end gap-1" style={{ height: 90 }}>
         {buckets.map((b, i) => (
