@@ -16,7 +16,7 @@ import PreviewWatermark from "../components/PreviewWatermark";
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "";
 const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
 
-// Límites de tamaño para no quedarnos sin espacio en el plan gratuito de Supabase (1 GB total)
+// Límites de tamaño para cuidar el espacio de almacenamiento
 const MAX_VIDEO_MB = 20;
 const MAX_PHOTO_MB = 8;
 const MAX_SONG_MB = 8;
@@ -207,6 +207,7 @@ export default function CreatorPage() {
         `Hola! Quiero confirmar el pago de mi cápsula Revela 🎁\n` +
         `Código de pedido: ${order.order_code}\n` +
         `Plan: ${planName}\n` +
+        `Mira cómo quedó mi cápsula: ${SITE_URL}/vista/${order.order_code}\n` +
         `Te envío la captura de pago a continuación.`;
       const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
       setTimeout(() => { window.location.href = waUrl; }, 900);
@@ -440,11 +441,11 @@ export default function CreatorPage() {
                 <li>• Canción: <span style={{ color: TEXT_DARK }}>{youtubeId ? "sí" : "no"}</span></li>
                 <li>• Video: <span style={{ color: TEXT_DARK }}>{video ? "sí (incluido)" : "no"}</span></li>
               </ul>
-                <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: `1px solid #${accentHex}33` }}>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: TEXT_DARK }}>{planName}</span>
-                  <span className="rv-mono" style={{ fontSize: 12, color: `#${accentHex}` }}>{video ? "Fotos + video" : "Solo fotos"}</span>
-                </div>
-                <p className="rv-mono mt-2" style={{ fontSize: 9.5, color: TEXT_MUTED }}>Versión Básica (fotos, canción, mensajes) · Versión Pro (fotos, canción, mensajes y video).</p>
+              <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: `1px solid #${accentHex}33` }}>
+                <span style={{ fontSize: 13, color: TEXT_DARK }}>{video ? "Fotos + video" : "Solo fotos"}</span>
+                <span style={{ fontSize: 22, fontFamily: fontDef.css, fontStyle: fontDef.italic ? "italic" : "normal", color: `#${accentHex}` }}>${price}</span>
+              </div>
+              <p className="rv-mono mt-2" style={{ fontSize: 9.5, color: TEXT_MUTED }}>Referencial: $4 solo con fotos · $5 con fotos + video.</p>
 
               <button
                 onClick={handleConfirm}
@@ -495,11 +496,11 @@ export default function CreatorPage() {
                     order={{
                       emoji: meta.emoji, accentHex, fontDef, specialDate, occasion, mainText,
                       youtubeUrl, youtubeStart, songUrl: song?.url, photos, videoUrl: video?.url,
-                    closingText, storyBg,
-                  }}
-                />
-                <PreviewWatermark message="VISTA PREVIA · REALIZA EL PAGO" />
-              </div>
+                      closingText, storyBg,
+                    }}
+                  />
+                  <PreviewWatermark message="VISTA PREVIA · REALIZA EL PAGO" />
+                </div>
               )}
             </div>
 
