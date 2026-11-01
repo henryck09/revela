@@ -16,7 +16,7 @@ import PreviewWatermark from "../components/PreviewWatermark";
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "";
 const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
 
-// Límites de tamaño para cuidar el espacio de almacenamiento
+// Límites de tamaño para no quedarnos sin espacio en el plan gratuito de Supabase (1 GB total)
 const MAX_VIDEO_MB = 20;
 const MAX_PHOTO_MB = 8;
 const MAX_SONG_MB = 8;
@@ -164,6 +164,21 @@ export default function CreatorPage() {
     return null;
   }
 
+  function whatsappUrlFor(order) {
+    const message = [
+      `¡Hola! \u{1F44B} Quiero confirmar el pago de mi cápsula *Revela* \u{1F381}`,
+      ``,
+      `\u{1F4CC} *Pedido:* ${order.order_code}`,
+      `\u{2728} *Plan:* ${planName}`,
+      ``,
+      `\u{1F449} *Toca aquí y mira cómo quedó tu pedido:*`,
+      `${SITE_URL}/vista/${order.order_code}`,
+      ``,
+      `\u{1F4F8} Te envío la captura de mi pago a continuación. ¡Gracias! \u{1F49C}`,
+    ].join("\n");
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  }
+
   async function handleConfirm() {
     const err = validateContact();
     if (err) { toast.error(err); return; }
@@ -202,15 +217,7 @@ export default function CreatorPage() {
 
       toast.success("¡Pedido guardado! Redirigiendo a WhatsApp...", { id: toastId });
       setOrderDone(order);
-
-      const message =
-        `Hola! Quiero confirmar el pago de mi cápsula Revela 🎁\n` +
-        `Código de pedido: ${order.order_code}\n` +
-        `Plan: ${planName}\n` +
-        `Mira cómo quedó mi cápsula: ${SITE_URL}/vista/${order.order_code}\n` +
-        `Te envío la captura de pago a continuación.`;
-      const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-      setTimeout(() => { window.location.href = waUrl; }, 900);
+      setTimeout(() => { window.location.href = whatsappUrlFor(order); }, 900);
     } catch (e) {
       console.error(e);
       toast.error("Algo salió mal guardando tu pedido. Intenta de nuevo.", { id: toastId });
@@ -232,7 +239,7 @@ export default function CreatorPage() {
             recibirás un correo en <b>{email}</b> con tu QR final listo para usar.
           </p>
           <a
-            href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola! Mi código de pedido es ${orderDone.order_code}`)}`}
+            href={whatsappUrlFor(orderDone)}
             className="inline-block mt-5 rounded-full"
             style={{ background: `#${accentHex}`, color: "#FFF", fontWeight: 600, fontSize: 13, padding: "10px 22px" }}
           >
@@ -441,11 +448,11 @@ export default function CreatorPage() {
                 <li>• Canción: <span style={{ color: TEXT_DARK }}>{youtubeId ? "sí" : "no"}</span></li>
                 <li>• Video: <span style={{ color: TEXT_DARK }}>{video ? "sí (incluido)" : "no"}</span></li>
               </ul>
-              <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: `1px solid #${accentHex}33` }}>
-                <span style={{ fontSize: 13, color: TEXT_DARK }}>{video ? "Fotos + video" : "Solo fotos"}</span>
-                <span style={{ fontSize: 22, fontFamily: fontDef.css, fontStyle: fontDef.italic ? "italic" : "normal", color: `#${accentHex}` }}>${price}</span>
-              </div>
-              <p className="rv-mono mt-2" style={{ fontSize: 9.5, color: TEXT_MUTED }}>Referencial: $4 solo con fotos · $5 con fotos + video.</p>
+                <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: `1px solid #${accentHex}33` }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: TEXT_DARK }}>{planName}</span>
+                  <span className="rv-mono" style={{ fontSize: 12, color: `#${accentHex}` }}>{video ? "Fotos + video" : "Solo fotos"}</span>
+                </div>
+                <p className="rv-mono mt-2" style={{ fontSize: 9.5, color: TEXT_MUTED }}>Versión Básica (fotos, canción, mensajes) · Versión Pro (fotos, canción, mensajes y video).</p>
 
               <button
                 onClick={handleConfirm}
@@ -496,11 +503,11 @@ export default function CreatorPage() {
                     order={{
                       emoji: meta.emoji, accentHex, fontDef, specialDate, occasion, mainText,
                       youtubeUrl, youtubeStart, songUrl: song?.url, photos, videoUrl: video?.url,
-                      closingText, storyBg,
-                    }}
-                  />
-                  <PreviewWatermark message="VISTA PREVIA · REALIZA EL PAGO" />
-                </div>
+                    closingText, storyBg,
+                  }}
+                />
+                <PreviewWatermark message="VISTA PREVIA · REALIZA EL PAGO" />
+              </div>
               )}
             </div>
 
