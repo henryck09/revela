@@ -173,8 +173,6 @@ export default function CreatorPage() {
       ``,
       `\u{1F449} *Toca aquí y mira cómo quedó tu pedido:*`,
       `${SITE_URL}/vista/${order.order_code}`,
-      ``,
-      `\u{1F4F8} Te envío la captura de mi pago a continuación. ¡Gracias! \u{1F49C}`,
     ].join("\n");
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   }
