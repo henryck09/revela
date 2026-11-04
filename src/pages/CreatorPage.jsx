@@ -23,6 +23,12 @@ const MAX_PHOTO_MB = 8;
 const MAX_SONG_MB = 8;
 const mb = (bytes) => bytes / (1024 * 1024);
 
+// Emojis del mensaje de WhatsApp. Se usan símbolos de 3 bytes porque algunas versiones de WhatsApp
+// (sobre todo en computador) dañan los emojis de 4 bytes y los muestran como "�".
+// Si en el celular los emojis completos se ven bien, puedes cambiar estos valores por:
+//   gift: "\u{1F381}", pin: "\u{1F4CC}", point: "\u{1F449}"
+const WA_ICONS = { gift: "\u2728", pin: "\u2705", plan: "\u26A1", point: "\u27A1\uFE0F" };
+
 export default function CreatorPage() {
   const [occasion, setOccasion] = useState("especial");
   const [accent, setAccent] = useState(OCCASIONS.especial.accent);
@@ -171,12 +177,12 @@ export default function CreatorPage() {
 
   function whatsappUrlFor(order) {
     const message = [
-      `Quiero confirmar el pago de mi cápsula *Revela* \u{1F381}`,
+      `Quiero confirmar el pago de mi cápsula *Revela* ${WA_ICONS.gift}`,
       ``,
-      `\u{1F4CC} *Pedido:* ${order.order_code}`,
-      `\u{26A1} *Plan:* ${planName}`,
+      `${WA_ICONS.pin} *Pedido:* ${order.order_code}`,
+      `${WA_ICONS.plan} *Plan:* ${planName}`,
       ``,
-      `\u{1F449} *Toca aquí y mira cómo quedó tu pedido:*`,
+      `${WA_ICONS.point} *Toca aquí y mira cómo quedó tu pedido:*`,
       `${SITE_URL}/vista/${order.order_code}`,
     ].join("\n");
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;

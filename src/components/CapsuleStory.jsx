@@ -94,6 +94,18 @@ function YoutubeInlinePlayer({ youtubeId, youtubeStart, accentHex, onFail }) {
   );
 }
 
+/** Marco dorado navideño para fotos y video */
+function XmasFrame({ children }) {
+  return (
+    <div className="relative" style={{ padding: 6, borderRadius: 18, background: "linear-gradient(135deg,#F6E2A0,#D4A33C 50%,#F6E2A0)", boxShadow: "0 4px 14px rgba(153,27,27,0.22)" }}>
+      {children}
+      <span aria-hidden="true" style={{ position: "absolute", top: -12, left: -6, fontSize: 22 }}>{"\u{1F384}"}</span>
+      <span aria-hidden="true" style={{ position: "absolute", bottom: -10, right: -4, fontSize: 20 }}>{"\u2728"}</span>
+    </div>
+  );
+}
+const XMAS_MEDIA_STYLE = { borderRadius: 12, border: "2px solid #FFF8E1", display: "block" };
+
 /**
  * Renders the revealed capsule in the editor preview and public page.
  */
@@ -183,11 +195,9 @@ export default function CapsuleStory({ order, onBack }) {
           <StoryBlock key={photo.id || index}>
             <div className="px-4 py-3">
               {isXmas ? (
-                <div className="relative" style={{ padding: 6, borderRadius: 18, background: "linear-gradient(135deg,#F6E2A0,#D4A33C 50%,#F6E2A0)", boxShadow: "0 4px 14px rgba(153,27,27,0.22)" }}>
-                  <img src={photo.url} alt="" className="w-full object-cover" style={{ maxHeight: 300, borderRadius: 12, border: "2px solid #FFF8E1", display: "block" }} />
-                  <span aria-hidden="true" style={{ position: "absolute", top: -12, left: -6, fontSize: 22 }}>{"\u{1F384}"}</span>
-                  <span aria-hidden="true" style={{ position: "absolute", bottom: -10, right: -4, fontSize: 20 }}>{"\u2728"}</span>
-                </div>
+                <XmasFrame>
+                  <img src={photo.url} alt="" className="w-full object-cover" style={{ maxHeight: 300, ...XMAS_MEDIA_STYLE }} />
+                </XmasFrame>
               ) : (
                 <img src={photo.url} alt="" className="w-full rounded-xl object-cover" style={{ maxHeight: 300 }} />
               )}
@@ -200,7 +210,13 @@ export default function CapsuleStory({ order, onBack }) {
           <StoryBlock>
             <div className="px-4 py-3">
               <p className="rv-mono uppercase text-center mb-2" style={{ fontSize: 10, letterSpacing: "0.1em", color: TEXT_MUTED }}>un último momento</p>
-              <video src={videoUrl} className="w-full rounded-xl object-cover" style={{ maxHeight: 340 }} controls autoPlay loop muted playsInline />
+              {isXmas ? (
+                <XmasFrame>
+                  <video src={videoUrl} className="w-full object-cover" style={{ maxHeight: 340, ...XMAS_MEDIA_STYLE }} controls autoPlay loop muted playsInline />
+                </XmasFrame>
+              ) : (
+                <video src={videoUrl} className="w-full rounded-xl object-cover" style={{ maxHeight: 340 }} controls autoPlay loop muted playsInline />
+              )}
             </div>
           </StoryBlock>
         )}
