@@ -1,6 +1,5 @@
 // Sends a printable QR card to the administrator for manual forwarding.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { XMAS_DECOR_B64 } from "./xmasDecor.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,8 +8,8 @@ const corsHeaders = {
 
 // Debe reflejar los mismos valores que src/lib/capsuleConfig.jsx
 const OCCASIONS: Record<string, { emoji: string; message: string }> = {
-  cumpleanos: { emoji: "🎂", message: "¡Feliz cumpleaños! Escanea para tu sorpresa" },
-  aniversario: { emoji: "💍", message: "Escanea y revive nuestra historia juntos" },
+  cumpleanos: { emoji: "🎂", message: "¡Feliz cumpleaños! Tu sorpresa te espera" },
+  aniversario: { emoji: "💍", message: "Revive nuestra historia juntos" },
   sanvalentin: { emoji: "❤️", message: "Un mensaje de amor te está esperando" },
   navidad: { emoji: "🎄", message: "Un regalo especial para ti en esta Navidad 🎄" },
   especial: { emoji: "✨", message: "Alguien preparó algo bonito para ti" },
@@ -54,22 +53,24 @@ Deno.serve(async (req) => {
     const bottomBar = isXmas ? "linear-gradient(90deg,#991B1B,#065F46,#991B1B)" : `linear-gradient(90deg,#${accentHex}55,#${accentHex})`;
     const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&margin=16&format=png&color=${qrColor}&bgcolor=FFFFFF&data=${encodeURIComponent(capsuleUrl)}`;
 
-    // Por defecto el QR se adjunta tal cual. En Navidad se le agrega la guirnalda y el gorro de Santa;
-    // si algo falla al decorarlo, se usa el QR normal y el correo sale igual.
+    // El QR se adjunta como imagen en línea. En Navidad, la guirnalda y el gorro de Santa van como
+    // una segunda imagen en línea pegada justo encima del QR. Se descarga de tu sitio
+    // (public/xmas-decor.png), igual que el QR, que es el método que ya sabemos que funciona.
     const qrFilename = `tarjeta-revela-${order.order_code}.png`;
-    let qrAttachment: Record<string, string> = { path: qrImageUrl, filename: qrFilename, content_id: "revela-capsule-qr", content_type: "image/png" };
-    let qrW = 270;
-    let qrH = 270;
+    const attachments: Record<string, string>[] = [
+      { path: qrImageUrl, filename: qrFilename, content_id: "revela-capsule-qr", content_type: "image/png" },
+    ];
     if (isXmas) {
-      try {
-        const decorated = await buildXmasQr(qrImageUrl);
-        qrAttachment = { content: decorated.base64, filename: qrFilename, content_id: "revela-capsule-qr", content_type: "image/png" };
-        qrW = Math.round((270 * decorated.width) / 1000); // el QR conserva su tamaño; el resto es decoración
-        qrH = Math.round((270 * decorated.height) / 1000);
-      } catch (e) {
-        console.error("No se pudo decorar el QR navideño, se envía el normal:", e);
-      }
+      attachments.push({ path: `${siteUrl.replace(/\/$/, "")}/xmas-decor.png`, filename: "adornos-navidad.png", content_id: "revela-xmas-decor", content_type: "image/png" });
     }
+    // La franja mide 1200x230 y el QR queda centrado a 1000 de ancho: se escala igual que el QR (270 px)
+    const decorW = Math.round((270 * 1200) / 1000);
+    const decorH = Math.round((decorW * 230) / 1200);
+    const decorHtml = isXmas
+      ? `<img src="cid:revela-xmas-decor" width="${decorW}" height="${decorH}" alt="" style="display:block;border:0;margin:0 auto" />`
+      : "";
+
+    console.log(`Tarjeta ${order.order_code}: ocasión=${order.occasion}, navideña=${isXmas}, adjuntos=${attachments.length}`);
 
     const resend = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -90,17 +91,15 @@ Deno.serve(async (req) => {
                   ${occasion.message}
                 </p>
                 <div style="display:inline-block;background:#fbf7ef;border:1px solid #${accentHex}66;border-radius:20px;padding:14px">
-                  <img src="cid:revela-capsule-qr" width="${qrW}" height="${qrH}" alt="Codigo QR: escanea para revelar tu sorpresa" style="display:block;border:0;max-width:100%;height:auto;border-radius:6px" />
+                  ${decorHtml}
+                  <img src="cid:revela-capsule-qr" width="270" height="270" alt="Codigo QR" style="display:block;border:0;margin:0 auto;border-radius:6px" />
                 </div>
-                <p style="margin:20px 0 0;font-family:Arial,sans-serif;font-size:12px;line-height:1.5;color:#756b91">
-                  Escanea el c&oacute;digo QR con la c&aacute;mara<br />de tu tel&eacute;fono para revelar tu sorpresa.
-                </p>
               </div>
               <div style="height:6px;background:${bottomBar}"></div>
             </div>
           </div>
         `,
-        attachments: [qrAttachment],
+        attachments,
       }),
     });
 
@@ -112,34 +111,6 @@ Deno.serve(async (req) => {
     return json({ error: error instanceof Error ? error.message : String(error) }, 500);
   }
 });
-
-/** Pega la franja navideña sobre el QR (1000x1000) dejando margen blanco: no tapa ningún punto del código */
-async function buildXmasQr(qrUrl: string): Promise<{ base64: string; width: number; height: number }> {
-  const { Image } = await import("npm:imagescript@3.13.1");
-  const PAD_SIDE = 100, PAD_BOTTOM = 100, TOP = 220;
-  const res = await fetch(qrUrl);
-  if (!res.ok) throw new Error(`No se pudo bajar el QR (${res.status})`);
-  const qr = await Image.decode(new Uint8Array(await res.arrayBuffer()));
-  const decor = await Image.decode(fromBase64(XMAS_DECOR_B64));
-  const canvas = new Image(qr.width + 2 * PAD_SIDE, qr.height + TOP + PAD_BOTTOM).fill(0xffffffff);
-  canvas.composite(qr, PAD_SIDE, TOP);
-  canvas.composite(decor, 0, 0);
-  const png = await canvas.encode();
-  return { base64: toBase64(png), width: canvas.width, height: canvas.height };
-}
-
-function fromBase64(b64: string): Uint8Array {
-  const bin = atob(b64);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
-}
-
-function toBase64(bytes: Uint8Array): string {
-  let s = "";
-  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  return btoa(s);
-}
 
 function json(body: unknown, status: number) {
   return new Response(JSON.stringify(body), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status });

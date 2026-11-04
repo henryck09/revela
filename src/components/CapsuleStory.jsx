@@ -182,7 +182,7 @@ export default function CapsuleStory({ order, onBack }) {
         {photos.map((photo, index) => (
           <StoryBlock key={photo.id || index}>
             <div className="px-4 py-3">
-              {isXmas && index === 0 ? (
+              {isXmas ? (
                 <div className="relative" style={{ padding: 6, borderRadius: 18, background: "linear-gradient(135deg,#F6E2A0,#D4A33C 50%,#F6E2A0)", boxShadow: "0 4px 14px rgba(153,27,27,0.22)" }}>
                   <img src={photo.url} alt="" className="w-full object-cover" style={{ maxHeight: 300, borderRadius: 12, border: "2px solid #FFF8E1", display: "block" }} />
                   <span aria-hidden="true" style={{ position: "absolute", top: -12, left: -6, fontSize: 22 }}>{"\u{1F384}"}</span>
