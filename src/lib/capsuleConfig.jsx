@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { Cake, Heart, Gift } from "lucide-react";
+import { Cake, Heart, Gift, TreePine } from "lucide-react";
 
 export const OCCASIONS = {
   cumpleanos: {
@@ -20,6 +20,12 @@ export const OCCASIONS = {
     suggestion: "Quiero que sepas cuánto significas para mí, hoy y siempre.",
     dateLabel: "Fecha especial",
   },
+  navidad: {
+    label: "Navidad", emoji: "🎄", accent: "crimson", icon: TreePine,
+    qrMessage: "Un regalo especial para ti en esta Navidad 🎄",
+    suggestion: "Que esta Navidad llegue con todo lo que más quieres y que este recuerdo nos acompañe siempre...",
+    dateLabel: "Fecha especial",
+  },
   especial: {
     label: "Mensaje especial", emoji: "✨", accent: "sage", icon: Gift,
     qrMessage: "Alguien preparó algo bonito para ti",
@@ -32,6 +38,9 @@ export const ACCENTS = {
   gold: { hex: "C9973F", label: "Ámbar" },
   rose: { hex: "C46B79", label: "Rosa" },
   sage: { hex: "6B8F6B", label: "Salvia" },
+  crimson: { hex: "991B1B", label: "Rojo carmesí" },
+  pine: { hex: "065F46", label: "Verde pino" },
+  xmasgold: { hex: "D97706", label: "Dorado" },
 };
 
 export const BACKGROUNDS = {
@@ -39,6 +48,9 @@ export const BACKGROUNDS = {
   rosa: { label: "Rosa suave", css: "linear-gradient(160deg,#FDEEF1,#FBDEE4,#FDEEF1)" },
   menta: { label: "Menta", css: "linear-gradient(160deg,#EAF6F0,#D9EFE1,#EAF6F0)" },
   lavanda: { label: "Lavanda", css: "linear-gradient(160deg,#F1EDFB,#E4DBF5,#F1EDFB)" },
+  nieve: { label: "Nieve", css: "linear-gradient(160deg,#F8FBFF,#E6F0FA,#F8FBFF)" },
+  rojocalido: { label: "Rojo cálido", css: "linear-gradient(160deg,#FDEEEA,#F8D8D0,#FDEEEA)" },
+  bosque: { label: "Verde bosque", css: "linear-gradient(160deg,#E6F1EA,#CDE4D6,#E6F1EA)" },
 };
 
 export const FONTS = {

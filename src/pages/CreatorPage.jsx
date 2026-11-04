@@ -62,7 +62,10 @@ export default function CreatorPage() {
   const price = video ? 5 : 4;
   const planName = video ? "Versión Pro" : "Versión Básica";
 
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&qzone=1&data=${encodeURIComponent(SITE_URL + "/m/" + slug)}&bgcolor=FFFFFF&color=${accentHex}`;
+  // QR navideño: puntos rojo oscuro o verde pino sobre blanco (alto contraste, lo lee cualquier cámara)
+  const XMAS_QR_COLORS = { "991B1B": "8B0000", "065F46": "0F5132" }; // el dorado no contrasta bien: se usa rojo oscuro
+  const qrColor = occasion === "navidad" ? (XMAS_QR_COLORS[String(accentHex).toUpperCase()] || "8B0000") : accentHex;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&qzone=1&data=${encodeURIComponent(SITE_URL + "/m/" + slug)}&bgcolor=FFFFFF&color=${qrColor}`;
 
   function selectOccasion(key) {
     setOccasion(key);
@@ -166,13 +169,15 @@ export default function CreatorPage() {
 
   function whatsappUrlFor(order) {
     const message = [
-      `\u{1F44B} Quiero confirmar mi cápsula *Revela* \u{1F381}`,
+      `¡Hola! \u{1F44B} Quiero confirmar el pago de mi cápsula *Revela* \u{1F381}`,
       ``,
       `\u{1F4CC} *Pedido:* ${order.order_code}`,
-      `\u{26A1} *Plan:* ${planName}`,
+      `\u{2728} *Plan:* ${planName}`,
       ``,
       `\u{1F449} *Toca aquí y mira cómo quedó tu pedido:*`,
       `${SITE_URL}/vista/${order.order_code}`,
+      ``,
+      `\u{1F4F8} Te envío la captura de mi pago a continuación. ¡Gracias! \u{1F49C}`,
     ].join("\n");
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   }

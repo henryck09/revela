@@ -11,9 +11,15 @@ const OCCASIONS: Record<string, { emoji: string; message: string }> = {
   cumpleanos: { emoji: "🎂", message: "¡Feliz cumpleaños! Escanea para tu sorpresa" },
   aniversario: { emoji: "💍", message: "Escanea y revive nuestra historia juntos" },
   sanvalentin: { emoji: "❤️", message: "Un mensaje de amor te está esperando" },
+  navidad: { emoji: "🎄", message: "Un regalo especial para ti en esta Navidad 🎄" },
   especial: { emoji: "✨", message: "Alguien preparó algo bonito para ti" },
 };
-const ACCENTS: Record<string, string> = { gold: "C9973F", rose: "C46B79", sage: "6B8F6B" };
+const ACCENTS: Record<string, string> = {
+  gold: "C9973F", rose: "C46B79", sage: "6B8F6B",
+  crimson: "991B1B", pine: "065F46", xmasgold: "D97706",
+};
+// Navidad: el QR va en rojo oscuro o verde pino (alto contraste); el dorado no se lee bien sobre blanco
+const XMAS_QR_COLORS: Record<string, string> = { "991B1B": "8B0000", "065F46": "0F5132", "D97706": "8B0000" };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -40,7 +46,12 @@ Deno.serve(async (req) => {
     const capsuleUrl = `${siteUrl.replace(/\/$/, "")}/m/${order.order_code}`;
     const accentHex = ACCENTS[order.accent] ?? ACCENTS.sage;
     const occasion = OCCASIONS[order.occasion] ?? OCCASIONS.especial;
-    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&margin=16&format=png&color=${accentHex}&bgcolor=FFFFFF&data=${encodeURIComponent(capsuleUrl)}`;
+    const isXmas = order.occasion === "navidad";
+    const qrColor = isXmas ? (XMAS_QR_COLORS[accentHex] ?? "8B0000") : accentHex;
+    // Navidad: franjas rojo-verde-rojo arriba y abajo de la tarjeta
+    const topBar = isXmas ? "linear-gradient(90deg,#991B1B,#065F46,#991B1B)" : `linear-gradient(90deg,#${accentHex},#${accentHex}55)`;
+    const bottomBar = isXmas ? "linear-gradient(90deg,#991B1B,#065F46,#991B1B)" : `linear-gradient(90deg,#${accentHex}55,#${accentHex})`;
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&margin=16&format=png&color=${qrColor}&bgcolor=FFFFFF&data=${encodeURIComponent(capsuleUrl)}`;
 
     const resend = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -53,7 +64,7 @@ Deno.serve(async (req) => {
         html: `
           <div style="margin:0;padding:32px;background:#f7f3eb;text-align:center">
             <div style="width:480px;height:480px;max-width:100%;margin:0 auto;box-sizing:border-box;background:#fffdf8;border:1px solid #${accentHex}55;border-radius:32px;padding:0;overflow:hidden;font-family:Georgia,serif;color:#30264d;text-align:center;box-shadow:0 18px 40px -18px rgba(40,31,71,0.35)">
-              <div style="height:6px;background:linear-gradient(90deg,#${accentHex},#${accentHex}55)"></div>
+              <div style="height:6px;background:${topBar}"></div>
               <div style="padding:30px 28px 34px">
                 <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#${accentHex}">Revela</p>
                 <div style="font-size:26px;line-height:1;margin:14px 0 12px">${occasion.emoji}</div>
@@ -67,7 +78,7 @@ Deno.serve(async (req) => {
                   Escanea el c&oacute;digo QR con la c&aacute;mara<br />de tu tel&eacute;fono para revelar tu sorpresa.
                 </p>
               </div>
-              <div style="height:6px;background:linear-gradient(90deg,#${accentHex}55,#${accentHex})"></div>
+              <div style="height:6px;background:${bottomBar}"></div>
             </div>
           </div>
         `,
