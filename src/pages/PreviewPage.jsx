@@ -81,7 +81,7 @@ export default function PreviewPage() {
       : { background: (BACKGROUNDS[order.background === "custom" ? "crema" : order.background] || BACKGROUNDS.crema).css };
 
   const waUrl = WHATSAPP_NUMBER
-    ? `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola! Quiero confirmar el pago de mi cápsula ahora. Mi código es ${order.order_code}`)}`
+    ? `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Quiero confirmar el pago de mi cápsula ahora. Mi código es ${order.order_code}`)}`
     : null;
 
   const mins = String(Math.floor(timeLeft / 60)).padStart(2, "0");

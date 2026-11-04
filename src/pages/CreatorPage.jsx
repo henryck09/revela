@@ -171,15 +171,13 @@ export default function CreatorPage() {
 
   function whatsappUrlFor(order) {
     const message = [
-      `¡Hola! \u{1F44B} Quiero confirmar el pago de mi cápsula *Revela* \u{1F381}`,
+      `Quiero confirmar el pago de mi cápsula *Revela* \u{1F381}`,
       ``,
       `\u{1F4CC} *Pedido:* ${order.order_code}`,
-      `\u{2728} *Plan:* ${planName}`,
+      `\u{26A1} *Plan:* ${planName}`,
       ``,
       `\u{1F449} *Toca aquí y mira cómo quedó tu pedido:*`,
       `${SITE_URL}/vista/${order.order_code}`,
-      ``,
-      `\u{1F4F8} Te envío la captura de mi pago a continuación. ¡Gracias! \u{1F49C}`,
     ].join("\n");
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
   }
