@@ -1,5 +1,6 @@
 // Sends a printable QR card to the administrator for manual forwarding.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { XMAS_DECOR_B64 } from "./xmasDecor.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -53,6 +54,23 @@ Deno.serve(async (req) => {
     const bottomBar = isXmas ? "linear-gradient(90deg,#991B1B,#065F46,#991B1B)" : `linear-gradient(90deg,#${accentHex}55,#${accentHex})`;
     const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&margin=16&format=png&color=${qrColor}&bgcolor=FFFFFF&data=${encodeURIComponent(capsuleUrl)}`;
 
+    // Por defecto el QR se adjunta tal cual. En Navidad se le agrega la guirnalda y el gorro de Santa;
+    // si algo falla al decorarlo, se usa el QR normal y el correo sale igual.
+    const qrFilename = `tarjeta-revela-${order.order_code}.png`;
+    let qrAttachment: Record<string, string> = { path: qrImageUrl, filename: qrFilename, content_id: "revela-capsule-qr", content_type: "image/png" };
+    let qrW = 270;
+    let qrH = 270;
+    if (isXmas) {
+      try {
+        const decorated = await buildXmasQr(qrImageUrl);
+        qrAttachment = { content: decorated.base64, filename: qrFilename, content_id: "revela-capsule-qr", content_type: "image/png" };
+        qrW = Math.round((270 * decorated.width) / 1000); // el QR conserva su tamaño; el resto es decoración
+        qrH = Math.round((270 * decorated.height) / 1000);
+      } catch (e) {
+        console.error("No se pudo decorar el QR navideño, se envía el normal:", e);
+      }
+    }
+
     const resend = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
@@ -63,7 +81,7 @@ Deno.serve(async (req) => {
         text: `Pedido ${order.order_code}. Reenvia esta tarjeta a ${order.full_name || "cliente"} (${order.email}). Enlace alternativo: ${capsuleUrl}`,
         html: `
           <div style="margin:0;padding:32px;background:#f7f3eb;text-align:center">
-            <div style="width:480px;height:480px;max-width:100%;margin:0 auto;box-sizing:border-box;background:#fffdf8;border:1px solid #${accentHex}55;border-radius:32px;padding:0;overflow:hidden;font-family:Georgia,serif;color:#30264d;text-align:center;box-shadow:0 18px 40px -18px rgba(40,31,71,0.35)">
+            <div style="width:480px;height:${isXmas ? "auto" : "480px"};min-height:480px;max-width:100%;margin:0 auto;box-sizing:border-box;background:#fffdf8;border:1px solid #${accentHex}55;border-radius:32px;padding:0;overflow:hidden;font-family:Georgia,serif;color:#30264d;text-align:center;box-shadow:0 18px 40px -18px rgba(40,31,71,0.35)">
               <div style="height:6px;background:${topBar}"></div>
               <div style="padding:30px 28px 34px">
                 <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#${accentHex}">Revela</p>
@@ -72,7 +90,7 @@ Deno.serve(async (req) => {
                   ${occasion.message}
                 </p>
                 <div style="display:inline-block;background:#fbf7ef;border:1px solid #${accentHex}66;border-radius:20px;padding:14px">
-                  <img src="cid:revela-capsule-qr" width="270" height="270" alt="Codigo QR: escanea para revelar tu sorpresa" style="display:block;border:0;max-width:100%;height:auto;border-radius:6px" />
+                  <img src="cid:revela-capsule-qr" width="${qrW}" height="${qrH}" alt="Codigo QR: escanea para revelar tu sorpresa" style="display:block;border:0;max-width:100%;height:auto;border-radius:6px" />
                 </div>
                 <p style="margin:20px 0 0;font-family:Arial,sans-serif;font-size:12px;line-height:1.5;color:#756b91">
                   Escanea el c&oacute;digo QR con la c&aacute;mara<br />de tu tel&eacute;fono para revelar tu sorpresa.
@@ -82,12 +100,7 @@ Deno.serve(async (req) => {
             </div>
           </div>
         `,
-        attachments: [{
-          path: qrImageUrl,
-          filename: `tarjeta-revela-${order.order_code}.png`,
-          content_id: "revela-capsule-qr",
-          content_type: "image/png",
-        }],
+        attachments: [qrAttachment],
       }),
     });
 
@@ -99,6 +112,34 @@ Deno.serve(async (req) => {
     return json({ error: error instanceof Error ? error.message : String(error) }, 500);
   }
 });
+
+/** Pega la franja navideña sobre el QR (1000x1000) dejando margen blanco: no tapa ningún punto del código */
+async function buildXmasQr(qrUrl: string): Promise<{ base64: string; width: number; height: number }> {
+  const { Image } = await import("npm:imagescript@3.13.1");
+  const PAD_SIDE = 100, PAD_BOTTOM = 100, TOP = 220;
+  const res = await fetch(qrUrl);
+  if (!res.ok) throw new Error(`No se pudo bajar el QR (${res.status})`);
+  const qr = await Image.decode(new Uint8Array(await res.arrayBuffer()));
+  const decor = await Image.decode(fromBase64(XMAS_DECOR_B64));
+  const canvas = new Image(qr.width + 2 * PAD_SIDE, qr.height + TOP + PAD_BOTTOM).fill(0xffffffff);
+  canvas.composite(qr, PAD_SIDE, TOP);
+  canvas.composite(decor, 0, 0);
+  const png = await canvas.encode();
+  return { base64: toBase64(png), width: canvas.width, height: canvas.height };
+}
+
+function fromBase64(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function toBase64(bytes: Uint8Array): string {
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
 
 function json(body: unknown, status: number) {
   return new Response(JSON.stringify(body), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status });

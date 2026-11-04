@@ -1,5 +1,6 @@
 import { Component, useEffect, useRef, useState } from "react";
 import { Play, ArrowLeft, Volume2 } from "lucide-react";
+import { ChristmasSnow, ChristmasTree, SparkleLayer, useTapSparkles } from "./ChristmasEffects";
 import {
   StoryBlock, formatDate, yearsSince, extractYoutubeId,
   TEXT_DARK, TEXT_MUTED, INPUT_BORDER,
@@ -107,13 +108,22 @@ export default function CapsuleStory({ order, onBack }) {
   const youtubeId = extractYoutubeId(youtubeUrl);
   const years = yearsSince(specialDate);
   const textStyle = { fontFamily: fontDef.css, fontStyle: fontDef.italic ? "italic" : "normal" };
+  const isXmas = occasion === "navidad";
+  const [sparkles, spawnSparkle] = useTapSparkles();
 
   return (
-    <div className="w-full h-full flex flex-col" style={storyBg}>
+    <div className="relative w-full h-full flex flex-col" style={storyBg} onClick={isXmas ? spawnSparkle : undefined}>
+      {isXmas && <ChristmasSnow />}
+      {isXmas && <SparkleLayer bursts={sparkles} />}
       <div className="relative flex-1 overflow-y-auto rv-scroll">
         <StoryBlock>
           <div className="flex flex-col justify-center px-6 py-10" style={{ minHeight: 220 }}>
             <span style={{ fontSize: 26 }} className="mb-3">{emoji}</span>
+            {isXmas && (
+              <p className="mb-3" style={{ fontFamily: "'Dancing Script','Brush Script MT',cursive", fontSize: 38, lineHeight: 1.05, fontWeight: 700, color: `#${accentHex}` }}>
+                Feliz Navidad
+              </p>
+            )}
             {specialDate && (
               <p className="rv-mono mb-3" style={{ color: `#${accentHex}`, fontSize: 11 }}>
                 {formatDate(specialDate)}{years !== null && (occasion === "cumpleanos" || occasion === "aniversario") ? ` · ${years} ${years === 1 ? "año" : "años"}` : ""}
@@ -163,10 +173,24 @@ export default function CapsuleStory({ order, onBack }) {
           </div>
         </StoryBlock>
 
+        {isXmas && (
+          <StoryBlock>
+            <ChristmasTree accentHex={accentHex} />
+          </StoryBlock>
+        )}
+
         {photos.map((photo, index) => (
           <StoryBlock key={photo.id || index}>
             <div className="px-4 py-3">
-              <img src={photo.url} alt="" className="w-full rounded-xl object-cover" style={{ maxHeight: 300 }} />
+              {isXmas && index === 0 ? (
+                <div className="relative" style={{ padding: 6, borderRadius: 18, background: "linear-gradient(135deg,#F6E2A0,#D4A33C 50%,#F6E2A0)", boxShadow: "0 4px 14px rgba(153,27,27,0.22)" }}>
+                  <img src={photo.url} alt="" className="w-full object-cover" style={{ maxHeight: 300, borderRadius: 12, border: "2px solid #FFF8E1", display: "block" }} />
+                  <span aria-hidden="true" style={{ position: "absolute", top: -12, left: -6, fontSize: 22 }}>{"\u{1F384}"}</span>
+                  <span aria-hidden="true" style={{ position: "absolute", bottom: -10, right: -4, fontSize: 20 }}>{"\u2728"}</span>
+                </div>
+              ) : (
+                <img src={photo.url} alt="" className="w-full rounded-xl object-cover" style={{ maxHeight: 300 }} />
+              )}
               {photo.caption && <p className="mt-2 px-1" style={{ ...textStyle, fontSize: 13, color: TEXT_DARK }}>{photo.caption}</p>}
             </div>
           </StoryBlock>

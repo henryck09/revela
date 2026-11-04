@@ -12,6 +12,7 @@ import CapsuleStory from "../components/CapsuleStory";
 import { createOrder } from "../services/orders";
 import { uploadPhotos, uploadFile } from "../services/mediaUpload";
 import PreviewWatermark from "../components/PreviewWatermark";
+import { XMAS_DECOR_DATA_URL } from "../lib/xmasDecor";
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "";
 const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin;
@@ -64,7 +65,8 @@ export default function CreatorPage() {
 
   // QR navideño: puntos rojo oscuro o verde pino sobre blanco (alto contraste, lo lee cualquier cámara)
   const XMAS_QR_COLORS = { "991B1B": "8B0000", "065F46": "0F5132" }; // el dorado no contrasta bien: se usa rojo oscuro
-  const qrColor = occasion === "navidad" ? (XMAS_QR_COLORS[String(accentHex).toUpperCase()] || "8B0000") : accentHex;
+  const isXmas = occasion === "navidad";
+  const qrColor = isXmas ? (XMAS_QR_COLORS[String(accentHex).toUpperCase()] || "8B0000") : accentHex;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&qzone=1&data=${encodeURIComponent(SITE_URL + "/m/" + slug)}&bgcolor=FFFFFF&color=${qrColor}`;
 
   function selectOccasion(key) {
@@ -481,8 +483,13 @@ export default function CreatorPage() {
                 <div className="w-full h-full flex flex-col items-center justify-center px-8 text-center" style={{ background: "#FFFDF8" }}>
                   <span style={{ fontSize: 22 }} className="mb-1">{meta.emoji}</span>
                   <p className="mb-4" style={{ fontFamily: fontDef.css, fontStyle: fontDef.italic ? "italic" : "normal", fontSize: 15, color: TEXT_DARK }}>{meta.qrMessage}</p>
-                  <div className="p-4 rounded-2xl mb-4" style={{ background: "#FBF7EF", border: `1px solid ${INPUT_BORDER}` }}>
-                    <img src={qrUrl} alt="Código QR" width={170} height={170} className="rounded-lg" />
+                  <div className="p-4 rounded-2xl mb-4" style={{ background: "#FBF7EF", border: `1px solid ${INPUT_BORDER}`, marginTop: isXmas ? 22 : 0 }}>
+                    <div className="relative" style={{ width: 170, height: 170 }}>
+                      <img src={qrUrl} alt="Código QR" width={170} height={170} className="rounded-lg" />
+                      {isXmas && (
+                        <img src={XMAS_DECOR_DATA_URL} alt="" aria-hidden="true" style={{ position: "absolute", left: -17, top: -37, width: 204, height: 39, pointerEvents: "none" }} />
+                      )}
+                    </div>
                   </div>
                   <p className="rv-mono" style={{ color: TEXT_MUTED, fontSize: 10 }}>{SITE_URL.replace(/^https?:\/\//, "")}/m/{slug}</p>
                   <button onClick={simulateScan} disabled={!hasMainPhoto} className="mt-6 rounded-full flex items-center gap-2 disabled:opacity-40" style={{ background: `#${accentHex}`, color: "#FFF", fontWeight: 600, fontSize: 13, padding: "10px 20px" }}>
