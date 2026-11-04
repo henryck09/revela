@@ -176,17 +176,20 @@ export default function CreatorPage() {
   }
 
   function whatsappUrlFor(order) {
-    const message = [
-      `Quiero confirmar el pago de mi cápsula *Revela* ${WA_ICONS.gift}`,
-      ``,
-      `${WA_ICONS.pin} *Pedido:* ${order.order_code}`,
-      `${WA_ICONS.plan} *Plan:* ${planName}`,
-      ``,
-      `${WA_ICONS.point} *Toca aquí y mira cómo quedó tu pedido:*`,
-      `${SITE_URL}/vista/${order.order_code}`,
-    ].join("\n");
-    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-  }
+      // Usamos espacios seguros y evitamos que los asteriscos queden pegados a símbolos raros
+      const message = [
+        `Quiero confirmar el pedido de mi cápsula Revela.`,
+        ``,
+        `• Pedido: ${order.order_code}`,
+        `• Plan: ${planName}`,
+        ``,
+        `Puedes ver cómo quedó tu capsula aquí:`,
+        `${SITE_URL}/vista/${order.order_code}`
+      ].join("\n");
+
+      // Codificamos correctamente el mensaje para la URL
+      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    }
 
   async function handleConfirm() {
     const err = validateContact();
