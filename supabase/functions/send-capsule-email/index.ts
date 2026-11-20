@@ -46,6 +46,8 @@ Deno.serve(async (req) => {
     const capsuleUrl = `${siteUrl.replace(/\/$/, "")}/m/${order.order_code}`;
     const accentHex = ACCENTS[order.accent] ?? ACCENTS.sage;
     const occasion = OCCASIONS[order.occasion] ?? OCCASIONS.especial;
+    // Texto sobre el QR: el que escribió el cliente (o el admin); si no hay, el de la ocasión
+    const cardText = typeof order.qr_text === "string" && order.qr_text.trim() ? escapeHtml(order.qr_text.trim()) : occasion.message;
     const isXmas = order.occasion === "navidad";
     const qrColor = isXmas ? (XMAS_QR_COLORS[accentHex] ?? "8B0000") : accentHex;
     // Navidad: franjas rojo-verde-rojo arriba y abajo de la tarjeta
@@ -88,7 +90,7 @@ Deno.serve(async (req) => {
                 <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#${accentHex}">Revela</p>
                 <div style="font-size:26px;line-height:1;margin:14px 0 12px">${occasion.emoji}</div>
                 <p style="margin:0 0 22px;font-size:21px;line-height:1.35;font-style:italic;font-weight:bold;color:#30264d">
-                  ${occasion.message}
+                  ${cardText}
                 </p>
                 <div style="display:inline-block;background:#fbf7ef;border:1px solid #${accentHex}66;border-radius:20px;padding:14px">
                   ${decorHtml}
@@ -111,6 +113,10 @@ Deno.serve(async (req) => {
     return json({ error: error instanceof Error ? error.message : String(error) }, 500);
   }
 });
+
+function escapeHtml(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 
 function json(body: unknown, status: number) {
   return new Response(JSON.stringify(body), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status });

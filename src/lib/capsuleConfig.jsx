@@ -4,13 +4,13 @@ import { Cake, Heart, Gift, TreePine } from "lucide-react";
 export const OCCASIONS = {
   cumpleanos: {
     label: "Cumpleaños", emoji: "🎂", accent: "gold", icon: Cake,
-    qrMessage: "¡Feliz cumpleaños! Escanea para tu sorpresa",
+    qrMessage: "¡Feliz cumpleaños! Tu sorpresa te espera",
     suggestion: "Hoy celebramos un año más de ti. Espero que este día esté lleno de todo lo que te hace feliz.",
     dateLabel: "Fecha de cumpleaños",
   },
   aniversario: {
     label: "Aniversario", emoji: "💍", accent: "rose", icon: Heart,
-    qrMessage: "Escanea y revive nuestra historia juntos",
+    qrMessage: "Revive nuestra historia juntos",
     suggestion: "Otro año a tu lado, otra historia que sumamos a la nuestra.",
     dateLabel: "Fecha de aniversario",
   },

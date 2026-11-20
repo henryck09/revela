@@ -36,6 +36,7 @@ export default function CreatorPage() {
   const [customImage, setCustomImage] = useState(null); // { file, url }
   const [font, setFont] = useState("fraunces");
   const [mainText, setMainText] = useState(OCCASIONS.especial.suggestion);
+  const [qrText, setQrText] = useState(OCCASIONS.especial.qrMessage);
   const [closingText, setClosingText] = useState("Gracias por ser parte de esta historia. Con cariño, siempre.");
   const [photoCount, setPhotoCount] = useState(2);
   const [photos, setPhotos] = useState([]); // { id, file, url, caption }
@@ -79,6 +80,7 @@ export default function CreatorPage() {
     setOccasion(key);
     setAccent(OCCASIONS[key].accent);
     if (!mainText || mainText === meta.suggestion) setMainText(OCCASIONS[key].suggestion);
+    if (!qrText || qrText === meta.qrMessage) setQrText(OCCASIONS[key].qrMessage);
   }
 
   function handlePhotoUpload(e) {
@@ -176,20 +178,17 @@ export default function CreatorPage() {
   }
 
   function whatsappUrlFor(order) {
-      // Usamos espacios seguros y evitamos que los asteriscos queden pegados a símbolos raros
-      const message = [
-        `Quiero confirmar el pedido de mi cápsula Revela.`,
-        ``,
-        `• Pedido: ${order.order_code}`,
-        `• Plan: ${planName}`,
-        ``,
-        `Puedes ver cómo quedó tu capsula aquí:`,
-        `${SITE_URL}/vista/${order.order_code}`
-      ].join("\n");
-
-      // Codificamos correctamente el mensaje para la URL
-      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-    }
+    const message = [
+      `Quiero confirmar el pago de mi cápsula *Revela* ${WA_ICONS.gift}`,
+      ``,
+      `${WA_ICONS.pin} *Pedido:* ${order.order_code}`,
+      `${WA_ICONS.plan} *Plan:* ${planName}`,
+      ``,
+      `${WA_ICONS.point} *Toca aquí y mira cómo quedó tu pedido:*`,
+      `${SITE_URL}/vista/${order.order_code}`,
+    ].join("\n");
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  }
 
   async function handleConfirm() {
     const err = validateContact();
@@ -224,6 +223,7 @@ export default function CreatorPage() {
         song_url: songUrl,
         photos: uploadedPhotos,
         video_url: videoUrl,
+        qr_text: qrText.trim() && qrText.trim() !== meta.qrMessage ? qrText.trim() : null,
         price,
       });
 
@@ -424,6 +424,16 @@ export default function CreatorPage() {
               <input ref={videoInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
             </Section>
 
+            <Section num="•" title="Mensaje sobre el QR">
+              <textarea
+                value={qrText} onChange={(e) => setQrText(e.target.value)} maxLength={90} rows={2}
+                placeholder={meta.qrMessage}
+                className="w-full rounded-lg px-4 py-3 outline-none resize-none"
+                style={{ background: INPUT_BG, border: `1px solid ${INPUT_BORDER}`, color: TEXT_DARK, fontSize: 13, lineHeight: 1.6 }}
+              />
+              <p className="rv-mono mt-1" style={{ fontSize: 10, color: TEXT_MUTED }}>Es el texto que aparece arriba del código QR en tu tarjeta. {qrText.length}/90</p>
+            </Section>
+
             <Section num="•" title="Color de acento del QR">
               <div className="flex gap-2">
                 {Object.entries(ACCENTS).map(([key, val]) => (
@@ -489,7 +499,7 @@ export default function CreatorPage() {
               {!revealed && !scanning && (
                 <div className="w-full h-full flex flex-col items-center justify-center px-8 text-center" style={{ background: "#FFFDF8" }}>
                   <span style={{ fontSize: 22 }} className="mb-1">{meta.emoji}</span>
-                  <p className="mb-4" style={{ fontFamily: fontDef.css, fontStyle: fontDef.italic ? "italic" : "normal", fontSize: 15, color: TEXT_DARK }}>{meta.qrMessage}</p>
+                  <p className="mb-4" style={{ fontFamily: fontDef.css, fontStyle: fontDef.italic ? "italic" : "normal", fontSize: 15, color: TEXT_DARK }}>{qrText.trim() || meta.qrMessage}</p>
                   <div className="p-4 rounded-2xl mb-4" style={{ background: "#FBF7EF", border: `1px solid ${INPUT_BORDER}`, marginTop: isXmas ? 22 : 0 }}>
                     <div className="relative" style={{ width: 170, height: 170 }}>
                       <img src={qrUrl} alt="Código QR" width={170} height={170} className="rounded-lg" />

@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import { X, Upload, Loader2, Film, Music2, Droplet, Calendar } from "lucide-react";
 import { updateOrder } from "../services/orders";
 import { uploadFile } from "../services/mediaUpload";
-import { BACKGROUNDS, PANEL_BG, INPUT_BG, INPUT_BORDER, TEXT_DARK, TEXT_MUTED } from "../lib/capsuleConfig";
+import { BACKGROUNDS, OCCASIONS, PANEL_BG, INPUT_BG, INPUT_BORDER, TEXT_DARK, TEXT_MUTED } from "../lib/capsuleConfig";
 
 const MAX_PHOTOS = 4;
 const MAX_VIDEO_MB = 20;
@@ -20,6 +20,8 @@ const mb = (bytes) => bytes / (1024 * 1024);
 export default function EditOrderModal({ order, onClose, onSaved }) {
   const [mainText, setMainText] = useState(order.main_text || "");
   const [closingText, setClosingText] = useState(order.closing_text || "");
+  const defaultQrText = OCCASIONS[order.occasion]?.qrMessage || "";
+  const [qrText, setQrText] = useState(order.qr_text || defaultQrText);
   const [specialDate, setSpecialDate] = useState((order.special_date || "").slice(0, 10)); // YYYY-MM-DD
   const [youtubeUrl, setYoutubeUrl] = useState(order.youtube_url || "");
   const [youtubeStart, setYoutubeStart] = useState(order.youtube_start || 0);
@@ -120,6 +122,7 @@ export default function EditOrderModal({ order, onClose, onSaved }) {
       await updateOrder(order.id, {
         main_text: mainText,
         closing_text: closingText,
+        qr_text: qrText.trim() && qrText.trim() !== defaultQrText ? qrText.trim() : null,
         special_date: specialDate || null,
         youtube_url: youtubeUrl || null,
         youtube_start: youtubeStart || 0,
@@ -161,6 +164,14 @@ export default function EditOrderModal({ order, onClose, onSaved }) {
           className="w-full rounded-lg px-3 py-2 mb-4 mt-1 outline-none"
           style={{ background: INPUT_BG, border: `1px solid ${INPUT_BORDER}`, fontSize: 13, color: TEXT_DARK }}
         />
+
+        <FieldLabel>Texto de la tarjeta del QR</FieldLabel>
+        <input
+          value={qrText} onChange={(e) => setQrText(e.target.value)} maxLength={90}
+          className="w-full rounded-lg px-3 py-2 mb-1 mt-1 outline-none"
+          style={{ background: INPUT_BG, border: `1px solid ${INPUT_BORDER}`, fontSize: 13, color: TEXT_DARK }}
+        />
+        <p className="mb-4" style={{ fontSize: 10, color: TEXT_MUTED }}>Sale arriba del QR en el correo. Para que cambie, usa "Reenviar tarjeta" después de guardar.</p>
 
         <FieldLabel>Fecha especial</FieldLabel>
         <div className="flex items-center gap-2 mb-4 mt-1">

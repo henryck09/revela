@@ -23,6 +23,7 @@ export async function createOrder(order) {
       song_url: order.song_url || null,
       photos: order.photos || [],
       video_url: order.video_url || null,
+      qr_text: order.qr_text || null,
       price: order.price,
       status: "PENDIENTE",
       payment_status: "PENDIENTE",
