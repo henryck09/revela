@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import LandingPage from "./pages/LandingPage";
 import CreatorPage from "./pages/CreatorPage";
 import RevealPage from "./pages/RevealPage";
 import PreviewPage from "./pages/PreviewPage";
@@ -11,7 +12,8 @@ function App() {
     <BrowserRouter>
       <Toaster position="top-center" />
       <Routes>
-        <Route path="/" element={<CreatorPage />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/crear" element={<CreatorPage />} />
         <Route path="/m/:code" element={<RevealPage />} />
         <Route path="/vista/:code" element={<PreviewPage />} />
         <Route path="/admin/login" element={<AdminLogin />} />

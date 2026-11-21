@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   QrCode, Upload, X, Sparkles, ImageIcon, Film,
@@ -30,13 +31,18 @@ const mb = (bytes) => bytes / (1024 * 1024);
 const WA_ICONS = { gift: "\u2728", pin: "\u2705", plan: "\u26A1", point: "\u27A1\uFE0F" };
 
 export default function CreatorPage() {
-  const [occasion, setOccasion] = useState("especial");
-  const [accent, setAccent] = useState(OCCASIONS.especial.accent);
+  // /crear?ocasion=navidad abre el creador con esa ocasión ya elegida (viene de la página principal)
+  const [searchParams] = useSearchParams();
+  const wanted = searchParams.get("ocasion");
+  const initialOccasion = wanted && Object.prototype.hasOwnProperty.call(OCCASIONS, wanted) ? wanted : "especial";
+
+  const [occasion, setOccasion] = useState(initialOccasion);
+  const [accent, setAccent] = useState(OCCASIONS[initialOccasion].accent);
   const [background, setBackground] = useState("crema");
   const [customImage, setCustomImage] = useState(null); // { file, url }
   const [font, setFont] = useState("fraunces");
-  const [mainText, setMainText] = useState(OCCASIONS.especial.suggestion);
-  const [qrText, setQrText] = useState(OCCASIONS.especial.qrMessage);
+  const [mainText, setMainText] = useState(OCCASIONS[initialOccasion].suggestion);
+  const [qrText, setQrText] = useState(OCCASIONS[initialOccasion].qrMessage);
   const [closingText, setClosingText] = useState("Gracias por ser parte de esta historia. Con cariño, siempre.");
   const [photoCount, setPhotoCount] = useState(2);
   const [photos, setPhotos] = useState([]); // { id, file, url, caption }
@@ -277,12 +283,12 @@ export default function CreatorPage() {
 
       <div className="max-w-6xl mx-auto px-6 py-10">
         <div className="flex items-center justify-between mb-10 rv-fade">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2" aria-label="Volver al inicio">
             <div className="flex items-center justify-center rounded-full" style={{ width: 34, height: 34, background: `#${accentHex}22`, border: `1px solid #${accentHex}66` }}>
               <Sparkles size={16} color={`#${accentHex}`} />
             </div>
             <span className="rv-mono uppercase" style={{ color: TEXT_MUTED, fontSize: 12, letterSpacing: "0.1em" }}>Revela</span>
-          </div>
+          </Link>
           <span className="rv-mono" style={{ color: TEXT_MUTED, fontSize: 12 }}>un qr, un momento</span>
         </div>
 
