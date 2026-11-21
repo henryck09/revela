@@ -22,9 +22,9 @@ export const REAL_WORKS = [];
 // Los que tienen `sample: true` muestran una etiqueta "Ejemplo": quítala cuando pongas uno real.
 // Si dejas la lista vacía ([]), la sección de testimonios se oculta sola.
 export const TESTIMONIALS = [
-  { name: "Nombre del cliente", country: "EC", stars: 5, occasion: "cumpleanos", text: "En menos de quince minutos tuve la página lista, con su código QR y todo organizado sin complicarme. Es súper intuitivo y el resultado se ve elegante desde el celular.", sample: true },
-  { name: "Nombre del cliente", country: "CO", stars: 5, occasion: "aniversario", text: "Armamos una cápsula con fotos de nuestros viajes, audios y una canción especial para nuestro aniversario. Cuando la abrimos juntos, la reacción fue increíble; se siente mucho más personal y duradero que un regalo tradicional.", sample: true },
-  { name: "Nombre del cliente", country: "ES", stars: 5, occasion: "navidad", text: "Lo usé para un detalle sorpresa y todos quedaron encantados revisando las fotos y mensajes en el mismo lugar. Es una forma distinta de guardar recuerdos que de verdad se vuelven a ver", sample: true },
+  { name: "Nicole Garcia", country: "EC", stars: 5, occasion: "cumpleanos", text: "En menos de quince minutos tuve la página lista, con su código QR y todo organizado sin complicarme. Es súper intuitivo y el resultado se ve elegante desde el celular.", sample: true },
+  { name: "María López", country: "CO", stars: 5, occasion: "aniversario", text: "Armamos una cápsula con fotos de nuestros viajes, audios y una canción especial para nuestro aniversario. Cuando la abrimos juntos, la reacción fue increíble; se siente mucho más personal y duradero que un regalo tradicional.", sample: true },
+  { name: "Carlos Rodríguez", country: "ES", stars: 5, occasion: "navidad", text: "Lo usé para un detalle sorpresa y todos quedaron encantados revisando las fotos y mensajes en el mismo lugar. Es una forma distinta de guardar recuerdos que de verdad se vuelven a ver", sample: true },
 ];
 
 // Preguntas frecuentes (puedes agregar, borrar o editar).
