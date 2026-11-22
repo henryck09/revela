@@ -59,9 +59,9 @@ export const SHOW_DEMO_EXAMPLES = true;
 // Para la captura: recórtala, tapa el número de teléfono, pide permiso y que pese menos de 200 KB.
 // ─────────────────────────────────────────────────────────────
 export const TESTIMONIALS = [
-  { name: "Andrea Fernandes", country: "EC", stars: 5, occasion: "cumpleanos", text: "Armamos una cápsula con fotos de nuestros viajes, audios y una canción especial para nuestro aniversario. Cuando la abrimos juntos, la reacción fue increíble; se siente mucho más personal y duradero que un regalo tradicional.", sample: true },
-  { name: "Pablo Jaramillo", country: "CO", stars: 5, occasion: "aniversario", text: "En menos de quince minutos tuve la página lista, con su código QR y todo organizado sin complicarme. Es súper intuitivo y el resultado se ve elegante desde el celular.", sample: true },
-  { name: "Maria Silva", country: "ES", stars: 5, occasion: "navidad", text: "Lo usé para un detalle sorpresa y todos quedaron encantados revisando las fotos y mensajes en el mismo lugar. Es una forma distinta de guardar recuerdos que de verdad se vuelven a ver.", sample: true },
+  { name: "Andrea Fernandes", country: "EC", stars: 5, occasion: "cumpleanos", text: "Armamos una cápsula con fotos de nuestros viajes, audios y una canción especial para nuestro aniversario. Cuando la abrimos juntos, la reacción fue increíble; se siente mucho más personal y duradero que un regalo tradicional.", sample: false },
+  { name: "Pablo Jaramillo", country: "CO", stars: 5, occasion: "aniversario", text: "En menos de quince minutos tuve la página lista, con su código QR y todo organizado sin complicarme. Es súper intuitivo y el resultado se ve elegante desde el celular.", sample: false },
+  { name: "Maria Silva", country: "ES", stars: 5, occasion: "navidad", text: "Lo usé para un detalle sorpresa y todos quedaron encantados revisando las fotos y mensajes en el mismo lugar. Es una forma distinta de guardar recuerdos que de verdad se vuelven a ver.", sample: false },
 ];
 
 // ─────────────────────────────────────────────────────────────
