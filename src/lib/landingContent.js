@@ -1,33 +1,72 @@
-// ─────────────────────────────────────────────────────────────
-// CONTENIDO EDITABLE DE LA PÁGINA PRINCIPAL
-// Cambia aquí los textos, testimonios y trabajos sin tocar el diseño.
-// ─────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════
+//  CONTENIDO EDITABLE DE LA PÁGINA PRINCIPAL
+//  Aquí pones tus testimonios y tus ejemplos. No hace falta tocar el diseño.
+//  Después de editar: npm run build → git add . → git commit → git push
+// ═════════════════════════════════════════════════════════════
 
-// Cifras de confianza debajo de la portada. Edítalas con datos reales.
+// ─────────────────────────────────────────────────────────────
+// 1) CIFRAS (debajo del titular de la portada)
+// ─────────────────────────────────────────────────────────────
 export const STATS = [
   { value: "80+", label: "cápsulas creadas" },
-  { value: "Sin apps", label: "se abre con la cámara" },
+  { value: "0 apps", label: "se abre con la cámara" },
   { value: "Minutos", label: "para armar la tuya" },
 ];
 
-// Trabajos REALES para la galería: escribe aquí los códigos de pedidos APROBADOS.
-// La galería muestra la primera foto de cada uno y, al tocarlo, se abre la cápsula completa.
-// Pide permiso al cliente antes de mostrar su trabajo. Ejemplo: ["RV-2026-323394", "RV-2026-111222"]
-export const REAL_WORKS = [];
-
-// Testimonios. Copia el comentario tal cual te lo escribió el cliente.
-//   country: código de 2 letras (EC, CO, PE, ES, US...) para mostrar la bandera
-//   occasion: cumpleanos | aniversario | sanvalentin | navidad | especial
-//   image (opcional): link o ruta de una captura de WhatsApp, ej. "/testimonios/maria.jpg" (en la carpeta public/)
-// Los que tienen `sample: true` muestran una etiqueta "Ejemplo": quítala cuando pongas uno real.
-// Si dejas la lista vacía ([]), la sección de testimonios se oculta sola.
-export const TESTIMONIALS = [
-  { name: "Nicole Garcia", country: "EC", stars: 5, occasion: "cumpleanos", text: "En menos de quince minutos tuve la página lista, con su código QR y todo organizado sin complicarme. Es súper intuitivo y el resultado se ve elegante desde el celular.", sample: true },
-  { name: "María López", country: "CO", stars: 5, occasion: "aniversario", text: "Armamos una cápsula con fotos de nuestros viajes, audios y una canción especial para nuestro aniversario. Cuando la abrimos juntos, la reacción fue increíble; se siente mucho más personal y duradero que un regalo tradicional.", sample: true },
-  { name: "Carlos Rodríguez", country: "ES", stars: 5, occasion: "navidad", text: "Lo usé para un detalle sorpresa y todos quedaron encantados revisando las fotos y mensajes en el mismo lugar. Es una forma distinta de guardar recuerdos que de verdad se vuelven a ver", sample: true },
+// ─────────────────────────────────────────────────────────────
+// 2) TUS EJEMPLOS (sección "Trabajos")
+//
+// Hay dos formas de agregar un ejemplo:
+//
+// A) LA MÁS FÁCIL: el código de un pedido ya aprobado.
+//    La galería toma su primera foto y, al tocarlo, se abre la cápsula completa
+//    (con su música, su video y todo). No subes nada nuevo.
+//      { code: "RV-2026-323394" }
+//    Opcional: { code: "RV-2026-323394", title: "Cumpleaños de Ana" }
+//    ⚠ Pide permiso al cliente antes: se verán sus fotos y su mensaje.
+//
+// B) UNA FOTO O UN VIDEO TUYO (por ejemplo, el QR pegado en un regalo):
+//      { title: "QR en un ramo", occasion: "aniversario", image: "/ejemplos/ramo.jpg" }
+//      { title: "Así reaccionó", occasion: "cumpleanos", image: "/ejemplos/ana.jpg", video: "/ejemplos/ana.mp4" }
+//    Los archivos se guardan en la carpeta  public/ejemplos/  de tu proyecto.
+//    Consejos: fotos de menos de 300 KB y videos cortos de menos de 8 MB.
+//
+// occasion puede ser: cumpleanos | aniversario | sanvalentin | navidad | especial
+// ─────────────────────────────────────────────────────────────
+export const WORKS = [
+  // { code: "RV-2026-000000" },
 ];
 
-// Preguntas frecuentes (puedes agregar, borrar o editar).
+// Mientras no tengas ejemplos propios, la galería muestra 5 ejemplos de demostración.
+// Cuando ya tengas los tuyos, cámbialo a false para que solo se vean los tuyos.
+export const SHOW_DEMO_EXAMPLES = true;
+
+// ─────────────────────────────────────────────────────────────
+// 3) TUS TESTIMONIOS (sección "Testimonios")
+//
+// Copia este bloque por cada testimonio y cámbiale los datos:
+//   {
+//     name: "María P.",                      // nombre (o solo la inicial del apellido)
+//     country: "EC",                         // 2 letras: EC, CO, PE, MX, ES, US... (muestra la bandera)
+//     occasion: "cumpleanos",                // cumpleanos | aniversario | sanvalentin | navidad | especial
+//     stars: 5,                              // de 1 a 5
+//     text: "Mi mamá lloró al verla...",     // el comentario tal cual te lo escribió
+//     image: "/testimonios/maria.jpg",       // OPCIONAL: captura de WhatsApp (va en public/testimonios/)
+//   },
+//
+// Los 3 de abajo son de relleno (tienen sample: true y muestran la etiqueta "Ejemplo").
+// BÓRRALOS y pon los reales. Si dejas la lista vacía ([]), la sección se oculta sola.
+// Para la captura: recórtala, tapa el número de teléfono, pide permiso y que pese menos de 200 KB.
+// ─────────────────────────────────────────────────────────────
+export const TESTIMONIALS = [
+  { name: "Andrea Fernandes", country: "EC", stars: 5, occasion: "cumpleanos", text: "Armamos una cápsula con fotos de nuestros viajes, audios y una canción especial para nuestro aniversario. Cuando la abrimos juntos, la reacción fue increíble; se siente mucho más personal y duradero que un regalo tradicional.", sample: true },
+  { name: "Pablo Jaramillo", country: "CO", stars: 5, occasion: "aniversario", text: "En menos de quince minutos tuve la página lista, con su código QR y todo organizado sin complicarme. Es súper intuitivo y el resultado se ve elegante desde el celular.", sample: true },
+  { name: "Maria Silva", country: "ES", stars: 5, occasion: "navidad", text: "Lo usé para un detalle sorpresa y todos quedaron encantados revisando las fotos y mensajes en el mismo lugar. Es una forma distinta de guardar recuerdos que de verdad se vuelven a ver.", sample: true },
+];
+
+// ─────────────────────────────────────────────────────────────
+// 4) PREGUNTAS FRECUENTES (puedes agregar, borrar o editar)
+// ─────────────────────────────────────────────────────────────
 export const FAQ = [
   {
     q: "¿Cómo se abre mi cápsula?",
@@ -63,8 +102,10 @@ export const FAQ = [
   },
 ];
 
-// Banners de temporada: aparecen solos entre las fechas indicadas (formato "MM-DD", de cada año).
-// occasion: la ocasión que se preselecciona al tocar el botón.
+// ─────────────────────────────────────────────────────────────
+// 5) BANNERS DE TEMPORADA (aparecen solos entre las fechas, formato "MM-DD")
+//    occasion: la ocasión que se preselecciona al tocar el botón.
+// ─────────────────────────────────────────────────────────────
 export const SEASON_BANNERS = [
   { id: "navidad", from: "11-15", to: "12-26", occasion: "navidad", text: "\u{1F384} Especial Navidad: tu QR con árbol interactivo, nieve y adornos" },
   { id: "sanvalentin", from: "02-01", to: "02-14", occasion: "sanvalentin", text: "\u2764\uFE0F San Valentín: sorprende con un mensaje de amor que se revela" },
